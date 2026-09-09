@@ -7,8 +7,10 @@ const remote = vi.hoisted(() => ({
   send: vi.fn(async () => 'ok'),
   remove: vi.fn(),
   create: vi.fn(),
+  authenticate: vi.fn(async () => {}),
 }));
 vi.mock('@/lib/supabase/browser', () => ({
+  realtimeSession: remote.authenticate,
   supabase: () => ({
     channel: () => {
       remote.create();
@@ -30,6 +32,7 @@ beforeEach(() => {
   remote.send.mockClear();
   remote.remove.mockReset();
   remote.create.mockClear();
+  remote.authenticate.mockClear();
 });
 
 it('can send after Supabase recovers from an initial subscription failure', async () => {
@@ -37,14 +40,35 @@ it('can send after Supabase recovers from an initial subscription failure', asyn
   const disconnected = vi.fn();
   const bus = new Bus('room', false, disconnected);
   const subscription = bus.listen('state', received);
-  remote.status!('CHANNEL_ERROR', new Error('temporary connection failure'));
-  await expect(subscription).rejects.toThrow();
+  await vi.waitFor(() => expect(remote.status).toBeTypeOf('function'));
+  remote.status!('CHANNEL_ERROR', new Error('You do not have permissions to read this topic'));
+  await expect(subscription).rejects.toThrow(
+    'canal de estado (CHANNEL_ERROR). Detalle de Supabase: You do not have permissions',
+  );
   remote.status!('SUBSCRIBED');
   remote.listener!({ payload: { version: 1 } });
   expect(received).toHaveBeenCalledWith({ version: 1 });
   await expect(bus.send('state', { hello: 'recovered' })).resolves.toBeUndefined();
   expect(remote.send).toHaveBeenCalledOnce();
   expect(disconnected).toHaveBeenCalledOnce();
+  bus.close();
+});
+
+it('sets the authenticated Realtime session before creating a private channel', async () => {
+  let authenticated!: () => void;
+  remote.authenticate.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      authenticated = resolve;
+    }),
+  );
+  const bus = new Bus('authenticated-room', false);
+  const subscription = bus.listen('state', vi.fn());
+  expect(remote.authenticate).toHaveBeenCalledOnce();
+  expect(remote.create).not.toHaveBeenCalled();
+  authenticated();
+  await vi.waitFor(() => expect(remote.create).toHaveBeenCalledOnce());
+  remote.status!('SUBSCRIBED');
+  await subscription;
   bus.close();
 });
 
@@ -57,6 +81,7 @@ it('waits for the previous subscription to close before recreating a controller 
   );
   const first = new Bus('reconnection', false);
   const initial = first.listen('state', vi.fn());
+  await vi.waitFor(() => expect(remote.status).toBeTypeOf('function'));
   remote.status!('SUBSCRIBED');
   await initial;
   first.close();
