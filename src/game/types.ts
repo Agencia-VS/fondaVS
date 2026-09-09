@@ -33,7 +33,7 @@ export const GAME_INFO: Record<
   memory: {
     name: 'Memorice',
     subtitle: 'Buena memoria, mejor equipo.',
-    how: 'Mueve el cursor por la matriz 6×6 y voltea dos cartas en 15 segundos. Si son pareja, sumas y repites turno. Si fallas, le toca al siguiente equipo.',
+    how: 'Mueve el cursor por la matriz 6×5 y voltea dos cartas en 15 segundos. Si son pareja, sumas y repites turno. Si fallas, le toca al siguiente equipo.',
     number: '04',
   },
 };
@@ -72,18 +72,10 @@ export type RayuelaData = {
   scores: Scores;
   throws: ThrowResult[];
 };
-export const MEMORY_ICONS = [
-  'Empanada',
-  'Trompo',
-  'Chicha',
-  'Bandera',
-  'Guitarra',
-  'Volantín',
-  'Sombrero',
-  'Copihue',
-] as const;
-export const MEMORY_SIDE = 6;
-export const MEMORY_CARD_COUNT = MEMORY_SIDE * MEMORY_SIDE;
+export { MEMORY_ICONS } from './memory-icons';
+export const MEMORY_COLUMNS = 6;
+export const MEMORY_ROWS = 5;
+export const MEMORY_CARD_COUNT = MEMORY_COLUMNS * MEMORY_ROWS;
 export const MEMORY_PAIR_COUNT = MEMORY_CARD_COUNT / 2;
 export type MemoryData = {
   kind: 'memory';

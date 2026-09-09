@@ -13,7 +13,7 @@
 | Carrera de sacos | IZQ y DER alternados; cada pareja avanza un paso                   | Flechas ← → o A / D                                                                |
 | Rayuela          | LANZAR cuando el cursor esté cerca de la cuerda central            | Espacio                                                                            |
 | Penales          | Elegir una de las cinco zonas, para chutar o atajar según el turno | 1 arriba izquierda, 2 arriba derecha, 3 centro, 4 abajo izquierda, 5 abajo derecha |
-| Memorice (6×6)   | Flechas para mover el cursor y VOLTEAR para buscar una pareja      | Flechas y espacio                                                                  |
+| Memorice (6×5)   | Flechas para mover el cursor y VOLTEAR para buscar una pareja      | Flechas y espacio                                                                  |
 
 Los botones se activan cuando corresponde tu turno. La CPU juega sus turnos automáticamente, incluidos los partidos de penales entre otros equipos. En penales tienes cinco segundos y, si no eliges, se usa el centro. Cada equipo disputa una semifinal y luego la final o el tercer puesto.
 
@@ -24,6 +24,8 @@ La CPU corre a un ritmo variable y puede tropezar; lanza con un margen de error 
 Este modo no necesita Supabase, variables de entorno ni una cuenta. Sus resultados solo suman al marcador de práctica de esa página, se reinician al recargar y nunca se guardan en el campeonato del evento. Después de descargar la página no necesita conexión para jugar; recargarla o abrirla por primera vez sí requiere acceder al sitio.
 
 ## Jugar en el evento con celulares
+
+La pantalla del proyector ya usa la composición 2.5D: capas de fondo, puestos de fonda, cancha en perspectiva y sombras de contacto. Los controles y las reglas siguen siendo los mismos; no hace falta instalar nada en los celulares.
 
 Primero completar [la configuración de Supabase y Vercel](SETUP.md).
 

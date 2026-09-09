@@ -14,7 +14,8 @@ import { CommandGate, commandSchema } from '@/game/protocol';
 import {
   MEMORY_CARD_COUNT,
   MEMORY_PAIR_COUNT,
-  MEMORY_SIDE,
+  MEMORY_COLUMNS,
+  MEMORY_ICONS,
   Round,
   TEAMS,
   zeroScores,
@@ -136,11 +137,11 @@ function moveTo(r: Round, index: number, now: number): Round {
   while (r.data.kind === 'memory' && r.data.cursor !== index) {
     const cursor = r.data.cursor;
     const direction =
-      Math.floor(cursor / MEMORY_SIDE) < Math.floor(index / MEMORY_SIDE)
+      Math.floor(cursor / MEMORY_COLUMNS) < Math.floor(index / MEMORY_COLUMNS)
         ? 'down'
-        : Math.floor(cursor / MEMORY_SIDE) > Math.floor(index / MEMORY_SIDE)
+        : Math.floor(cursor / MEMORY_COLUMNS) > Math.floor(index / MEMORY_COLUMNS)
           ? 'up'
-          : cursor % MEMORY_SIDE < index % MEMORY_SIDE
+          : cursor % MEMORY_COLUMNS < index % MEMORY_COLUMNS
             ? 'right'
             : 'left';
     r = applyAction(r, team, { type: 'move', direction }, now).round;
@@ -148,12 +149,14 @@ function moveTo(r: Round, index: number, now: number): Round {
   return r;
 }
 describe('memorice', () => {
-  it('shuffles eighteen pairs and never publishes hidden cards', () => {
+  it('shuffles fifteen illustrated pairs on a 6x5 board and never publishes hidden cards', () => {
     const r = createRound('memory', 0, 'm', 17);
     if (r.data.kind !== 'memory') throw Error();
     for (let i = 0; i < MEMORY_PAIR_COUNT; i++)
       expect(r.data.cards.filter((x) => x === i)).toHaveLength(2);
-    expect(r.data.cards).toHaveLength(MEMORY_CARD_COUNT);
+    expect(r.data.cards).toHaveLength(30);
+    expect(MEMORY_ICONS).toHaveLength(15);
+    expect(r.data.cards.every((id) => Boolean(MEMORY_ICONS[id]))).toBe(true);
     expect(publicRound(r).data).toMatchObject({ cards: Array(MEMORY_CARD_COUNT).fill(null) });
   });
   it('rejects a double flip of the same card and expires a one-card turn', () => {
@@ -163,6 +166,32 @@ describe('memorice', () => {
     expect(applyAction(r, 'lab', { type: 'move', direction: 'right' }, 3001).accepted).toBe(false);
     r = advanceRound(r, 18000);
     expect(r.data).toMatchObject({ teamIndex: 1, open: [], phase: 'pick' });
+  });
+  it('reaches all 30 cells and clamps movement to six columns and five rows', () => {
+    let r = createRound('memory', 0, 'edges');
+    for (let index = 0; index < 30; index++) {
+      r = moveTo(r, index, 3100);
+      expect(r.data).toMatchObject({ cursor: index });
+    }
+    for (const [cursor, direction] of [
+      [0, 'up'],
+      [0, 'left'],
+      [5, 'right'],
+      [5, 'up'],
+      [24, 'left'],
+      [24, 'down'],
+      [29, 'right'],
+      [29, 'down'],
+    ] as const) {
+      r = moveTo(r, cursor, 3100);
+      r = applyAction(r, 'creative', { type: 'move', direction }, 3100).round;
+      expect(r.data).toMatchObject({ cursor });
+    }
+    r = applyAction(r, 'creative', { type: 'flip' }, 3100).round;
+    expect(r.data).toMatchObject({ open: [29] });
+    expect(publicRound(r).data).toMatchObject({
+      cards: expect.arrayContaining([expect.any(Number)]),
+    });
   });
   it('shows a mismatch, blocks movement during reveal, then passes the turn', () => {
     let r = createRound('memory', 0, 'm');

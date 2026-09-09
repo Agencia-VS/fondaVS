@@ -1,0 +1,60 @@
+{
+  "schema": "game-room.prop-manifest.v1",
+  "roomId": "fonda-25d",
+  "generation": {
+    "provider": "meshy",
+    "apiModel": "meshy-5",
+    "pricingSource": "https://docs.meshy.ai/en/api/pricing",
+    "pricingVerifiedAt": "",
+    "creditsPerTexturedTask": 15,
+    "hardCreditCeiling": 0,
+    "maxChargedAttemptsPerAsset": 2
+  },
+  "assets": [
+    {
+      "id": "fonda-booth",
+      "function": "Far-layer Chilean fonda booth that gives the fixed camera a readable horizon and depth anchor.",
+      "description": "Low-poly booth with striped awning, no loose parts, and a front-facing opening.",
+      "class": "reusable",
+      "dimensionsMeters": [2.4, 0.8, 1.5],
+      "attachmentFace": "floor",
+      "semanticFront": "positive-y",
+      "targetPolycount": 2200,
+      "intendedInstances": 3,
+      "rejectionCriteria": ["silhouette is unreadable at 960x540", "awning creates unsupported floating geometry", "front opening is not visibly oriented to the camera"],
+      "image": {"prompt": "Chilean fonda booth in restrained 8/16-bit-inspired low-poly style, transparent background, front three-quarter view", "generator": "pending explicit visual approval", "source": "images/prop-fonda-booth.svg", "approved": false, "approvedBy": ""},
+      "attempts": [],
+      "acceptedMesh": {}
+    },
+    {
+      "id": "pixel-huaso-hero",
+      "function": "Foreground team avatar silhouette that remains legible above the playfield.",
+      "description": "Compact huaso character with a sack variant, flat color blocks, and a stable foot contact plane.",
+      "class": "hero",
+      "dimensionsMeters": [0.7, 0.4, 1.4],
+      "attachmentFace": "floor",
+      "semanticFront": "positive-y",
+      "targetPolycount": 1400,
+      "intendedInstances": 4,
+      "rejectionCriteria": ["team-color silhouette is lost at projector distance", "feet do not share one contact plane", "sack variant obscures the body envelope"],
+      "image": {"prompt": "Chilean huaso character with sack, compact low-poly sprite-ready silhouette, transparent background, front view", "generator": "pending explicit visual approval", "source": "images/prop-huaso.svg", "approved": false, "approvedBy": ""},
+      "attempts": [],
+      "acceptedMesh": {}
+    },
+    {
+      "id": "host-depth-panel",
+      "function": "Reusable extruded board backing for rayuela, memory and scoreboard surfaces.",
+      "description": "Thin dark-teal panel with a visible lower extrusion that bakes cleanly to a sprite or mesh.",
+      "class": "reusable",
+      "dimensionsMeters": [5.0, 0.18, 2.8],
+      "attachmentFace": "freestanding",
+      "semanticFront": "positive-y",
+      "targetPolycount": 900,
+      "intendedInstances": 3,
+      "rejectionCriteria": ["edge extrusion disappears against the stage", "panel depth causes text occlusion", "UVs introduce visible seams in the baked sprite"],
+      "image": {"prompt": "Minimal dark teal game-board panel with chunky lower extrusion, low-poly, transparent background, front view", "generator": "pending explicit visual approval", "source": "images/prop-depth-panel.svg", "approved": false, "approvedBy": ""},
+      "attempts": [],
+      "acceptedMesh": {}
+    }
+  ]
+}

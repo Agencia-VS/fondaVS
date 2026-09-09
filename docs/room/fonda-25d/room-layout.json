@@ -1,0 +1,22 @@
+{
+  "schema": "game-room.layout.v1",
+  "roomId": "fonda-25d",
+  "units": "meters",
+  "surfaces": [
+    {"id": "stage-shell", "kind": "screen-space floor and backdrop", "dimensionsMeters": [9.6, 5.4, 1.0]},
+    {"id": "playfield-plane", "kind": "fixed camera playfield", "dimensionsMeters": [7.0, 4.0, 0.12]}
+  ],
+  "instances": [
+    {"id": "booth-left", "assetId": "fonda-booth", "position": [-3.4, 1.2, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1]},
+    {"id": "booth-center", "assetId": "fonda-booth", "position": [0, 1.4, 0], "rotation": [0, 0, 0], "scale": [0.7, 0.7, 0.7]},
+    {"id": "booth-right", "assetId": "fonda-booth", "position": [3.4, 1.2, 0], "rotation": [0, 0, 0], "scale": [1.1, 1.1, 1.1]},
+    {"id": "hero-creative", "assetId": "pixel-huaso-hero", "position": [-2.8, -0.8, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1]},
+    {"id": "hero-lab", "assetId": "pixel-huaso-hero", "position": [-0.9, -0.8, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1]},
+    {"id": "hero-sports", "assetId": "pixel-huaso-hero", "position": [0.9, -0.8, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1]},
+    {"id": "hero-media", "assetId": "pixel-huaso-hero", "position": [2.8, -0.8, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1]},
+    {"id": "rayuela-panel", "assetId": "host-depth-panel", "position": [0, 0.2, 0], "rotation": [0, 0, 0], "scale": [1.4, 1, 1]},
+    {"id": "memory-panel", "assetId": "host-depth-panel", "position": [0, 0.2, 0], "rotation": [0, 0, 0], "scale": [1.0, 1, 1]},
+    {"id": "score-panel", "assetId": "host-depth-panel", "position": [0, 0.2, 0], "rotation": [0, 0, 0], "scale": [0.8, 1, 1]}
+  ],
+  "productionCamera": {"location": [0, -8, 7], "target": [0, 0, 1.8], "verticalFovDegrees": 24}
+}

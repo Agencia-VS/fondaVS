@@ -1,0 +1,6 @@
+{
+  "schema": "game-room.opening-schedule.v1",
+  "roomId": "fonda-25d",
+  "primaryArrival": {"openingId": "", "exception": "Canvas projection has no walkable room or physical arrival geometry; the operator opens the host route directly and players arrive through /play or QR."},
+  "openings": []
+}
