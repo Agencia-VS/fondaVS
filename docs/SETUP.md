@@ -1,5 +1,15 @@
 # Configuración de Supabase y Vercel
 
+## Probar ahora contra la CPU
+
+Abrir `/solo` o **Jugar contra la CPU** desde el inicio. Funciona sin variables de entorno, cuenta, SQL, proyector ni otros controles. Elegir equipo, juego y dificultad; los otros tres equipos juegan automáticamente. Ver [Uso de la app](USAGE.md).
+
+## SQL listo para copiar
+
+El único archivo necesario es [202609090001_fonda.sql](../supabase/migrations/202609090001_fonda.sql). En Supabase → **SQL Editor → New query**, pegar el archivo completo y pulsar **Run**. Ejecutarlo una sola vez en un proyecto nuevo: incluye tablas, índices, funciones y políticas de Realtime dentro de una transacción. No hay que reemplazar correos, UUID ni claves dentro del SQL.
+
+Si ya se aplicó la primera versión de esta migración, **no volver a ejecutarla**. El modo CPU no necesita nuevas tablas ni migraciones adicionales.
+
 ## Supabase
 
 Usar primero un proyecto o rama de ensayo. La migración crea tablas `fonda_*` y políticas específicas en `realtime.messages`. Revisar políticas existentes si se comparte proyecto: las políticas permisivas se combinan con OR y una regla general podría anular el aislamiento esperado.
@@ -13,7 +23,18 @@ Usar primero un proyecto o rama de ensayo. La migración crea tablas `fonda_*` y
 
 No se necesita publicar tablas en Postgres Changes: el movimiento usa Broadcast. Las API verifican el JWT con `auth.getUser` antes de acceder a datos con la credencial de servidor.
 
-Fuentes: [sesiones anónimas](https://supabase.com/docs/guides/auth/auth-anonymous), [Realtime Authorization](https://supabase.com/docs/guides/realtime/authorization) y [Broadcast](https://supabase.com/docs/guides/realtime/broadcast).
+### Variables exactas
+
+| Variable                               | Valor                                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`             | URL del proyecto, como `https://<project-ref>.supabase.co`                                             |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave `sb_publishable_…` de ese proyecto; también acepta la clave `anon` heredada                      |
+| `SUPABASE_SECRET_KEY`                  | Clave `sb_secret_…` del mismo proyecto; también acepta la clave `service_role` heredada. Solo servidor |
+| `OPERATOR_EMAILS`                      | Correo del operador creado en Authentication → Users. Varios correos separados por comas               |
+
+`OPERATOR_EMAILS` autoriza cuentas existentes; no crea usuarios ni contraseñas. La contraseña se define al crear el usuario en Supabase Auth y se utiliza para ingresar en `/operator`.
+
+Fuentes: [sesiones anónimas](https://supabase.com/docs/guides/auth/auth-anonymous), [Realtime Authorization](https://supabase.com/docs/guides/realtime/authorization), [claves API](https://supabase.com/docs/guides/getting-started/api-keys) y [Broadcast](https://supabase.com/docs/guides/realtime/broadcast).
 
 ## Vercel
 

@@ -33,3 +33,11 @@ Resultado único por ronda y transición a espera se confirman en una transacci�
 Ocultar la ventana del host pausa. Perder su transporte exige cancelar y repetir la ronda incompleta. Cerrar el host conserva únicamente el campeonato confirmado. El organizador es confiable: esta arquitectura no proporciona arbitraje remoto independiente.
 
 Los tests SQL ejecutan la migración en PGlite, con `auth.uid` y `realtime.topic` simulados. La conexión al servicio real sigue requiriendo validación.
+
+## Modo individual
+
+La ruta `/solo` ejecuta `SoloSession` en el navegador: reutiliza el motor de reglas y el Canvas del evento, y coloca el control humano junto a la cancha. No crea una sala ni inicializa clientes de Supabase. Tres instancias de `CpuPlayer` reciben exclusivamente `PublicRound`; las cartas ocultas, las elecciones secretas y la semilla del playoff nunca se entregan al rival.
+
+Las semillas de los rivales son independientes de la semilla del tablero. El programador de CPU usa tiempos y acciones del mismo motor: no modifica pasos, cartas ni puntajes directamente. Cada CPU mantiene su propia memoria limitada de cartas vistas. `GamePad` y `controlState` se comparten con los celulares para conservar reglas y controles consistentes.
+
+El reloj avanza cada 50 ms; Canvas dibuja por `requestAnimationFrame`. Al ocultar la pestaña se pausa explícitamente y la reanudación desplaza los plazos del motor. Los resultados se registran una sola vez por ID en el estado de React y se descartan al recargar; nunca se confirman mediante la API del campeonato.

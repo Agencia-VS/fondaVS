@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { Brand, Bunting, ErrorMessage } from './Brand';
 import { GAME_INFO, GAMES } from '@/game/types';
 import { createDemo } from '@/lib/rooms';
@@ -73,6 +74,10 @@ export default function Home() {
             <small>Escanea el QR del proyector o escribe el código.</small>
             <ErrorMessage message={error} />
           </form>
+          <Link href="/solo" className="button secondary solo-home-link">
+            Jugar contra la CPU <span>→</span>
+          </Link>
+          <span className="demo-note">Tú + 3 rivales · una sola pantalla</span>
           <button
             className="demo-link"
             onClick={() => {
