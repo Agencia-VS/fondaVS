@@ -29,6 +29,12 @@ beforeAll(async () => {
   );
   await db.exec(spectatorsSql);
   await db.exec(spectatorsSql); // The follow-up migration is safe to run again.
+  const realtimeSql = readFileSync(
+    new URL('../supabase/migrations/202609090003_realtime_permissions.sql', import.meta.url),
+    'utf8',
+  );
+  await db.exec(realtimeSql);
+  await db.exec(realtimeSql); // Restoring the policies is also idempotent.
   const r = await db.query<{ id: string }>(
     'insert into fonda_rooms(code,owner_id) values ($1,$2) returning id',
     ['ABC234', owner],

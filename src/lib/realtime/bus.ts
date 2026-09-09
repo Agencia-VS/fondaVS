@@ -1,7 +1,21 @@
 'use client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/browser';
+import { realtimeSession, supabase } from '@/lib/supabase/browser';
 type Listener = (payload: unknown) => void;
+function topicLabel(topic: string) {
+  if (topic === 'state') return 'estado';
+  if (topic === 'control') return 'operador';
+  if (topic.startsWith('in:')) return 'entrada del control';
+  if (topic.startsWith('out:')) return 'respuesta al control';
+  return 'sala';
+}
+
+function connectionMessage(topic: string, status: string, cause?: Error) {
+  const detail = cause?.message.replace(/\s+/g, ' ').trim().slice(0, 180);
+  return `No se pudo conectar el canal de ${topicLabel(topic)} (${status}).${
+    detail ? ` Detalle de Supabase: ${detail}` : ''
+  }`;
+}
 // Supabase reuses a channel object by topic until its asynchronous removal
 // finishes. A new controller must not subscribe to the old, closing object.
 const removals = new Map<string, Promise<void>>();
@@ -18,11 +32,22 @@ export class Bus {
     }
   >();
   private closed = false;
+  private authReady: Promise<void> | undefined;
   constructor(
     private roomId: string,
     private demo: boolean,
     private onDisconnect: (message?: string) => void = () => {},
   ) {}
+  private authenticate() {
+    if (this.demo) return Promise.resolve();
+    if (this.authReady) return this.authReady;
+    const pending = realtimeSession().catch((error) => {
+      if (this.authReady === pending) this.authReady = undefined;
+      throw error;
+    });
+    this.authReady = pending;
+    return pending;
+  }
   private ensure(topic: string) {
     let entry = this.channels.get(topic);
     if (entry) return entry;
@@ -53,12 +78,10 @@ export class Bus {
       };
       entry = connection;
       this.channels.set(topic, connection);
-      const fail = (status: string) => {
+      const fail = (status: string, cause?: Error) => {
         if (this.closed || this.channels.get(topic) !== connection) return;
         clearTimeout(timeout);
-        const error = new Error(
-          `No se pudo conectar con la sala (${status}). Reintenta la conexión; si continúa, revisa los permisos de Realtime en Supabase.`,
-        );
+        const error = new Error(connectionMessage(topic, status, cause));
         connection.failure = error;
         rejectReady(error);
         this.onDisconnect(error.message);
@@ -68,7 +91,7 @@ export class Bus {
         clearTimeout(timeout);
         rejectReady(new Error('Conexión cerrada.'));
       };
-      remote.subscribe((status) => {
+      remote.subscribe((status, error) => {
         if (this.closed || this.channels.get(topic) !== connection) return;
         if (status === 'SUBSCRIBED') {
           clearTimeout(timeout);
@@ -78,7 +101,7 @@ export class Bus {
           connection.ready = Promise.resolve();
           resolveReady();
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          fail(status);
+          fail(status, error);
         }
       });
     }
@@ -88,6 +111,7 @@ export class Bus {
   async listen(topic: string, fn: Listener) {
     const removing = removals.get(`fonda:${this.roomId}:${topic}`);
     if (!this.demo && removing) await removing;
+    await this.authenticate();
     if (this.closed) return;
     const e = this.ensure(topic);
     e.listeners.add(fn);
@@ -97,6 +121,7 @@ export class Bus {
   async send(topic: string, payload: unknown) {
     const removing = removals.get(`fonda:${this.roomId}:${topic}`);
     if (!this.demo && removing) await removing;
+    await this.authenticate();
     if (this.closed) throw new Error('Conexión cerrada.');
     const e = this.ensure(topic);
     if (e.failure) throw e.failure;

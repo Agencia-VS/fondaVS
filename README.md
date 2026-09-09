@@ -34,7 +34,7 @@ La demo usa BroadcastChannel y almacenamiento local. **Funciona entre pestañas 
 
 ## Configurar online
 
-Sigue [docs/SETUP.md](docs/SETUP.md): ejecutar las migraciones, activar sesiones anónimas, configurar canales privados y crear un operador confirmado. Si el proyecto ya funciona, aplicar solo [202609090002_spectators.sql](supabase/migrations/202609090002_spectators.sql) para habilitar las pantallas compartidas; no cambian las variables de entorno.
+Sigue [docs/SETUP.md](docs/SETUP.md): ejecutar las migraciones, activar sesiones anónimas, configurar canales privados y crear un operador confirmado. En un proyecto existente, aplica [202609090002_spectators.sql](supabase/migrations/202609090002_spectators.sql) si todavía falta y después [202609090003_realtime_permissions.sql](supabase/migrations/202609090003_realtime_permissions.sql). No cambian las variables de entorno.
 
 | Variable                               | Uso                                                                 |
 | -------------------------------------- | ------------------------------------------------------------------- |

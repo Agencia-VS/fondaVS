@@ -10,10 +10,11 @@ En Supabase → **SQL Editor → New query**, pegar cada archivo completo y puls
 
 1. [202609090001_fonda.sql](../supabase/migrations/202609090001_fonda.sql): migración inicial. **Solo para un proyecto que todavía no la tenga**; crea tablas, índices, funciones y políticas de Realtime.
 2. [202609090002_spectators.sql](../supabase/migrations/202609090002_spectators.sql): habilita las pantallas compartidas para jugar desde distintas casas. Aplicar también en proyectos existentes que ya tengan la primera migración. Se puede repetir; conserva equipos y resultados.
+3. [202609090003_realtime_permissions.sql](../supabase/migrations/202609090003_realtime_permissions.sql): restaura los permisos de los canales privados de operador, jugadores y espectadores. Aplicar en proyectos existentes. Se puede repetir y no borra datos.
 
 No hay que reemplazar correos, UUID ni claves dentro de los archivos.
 
-Si la aplicación ya funcionaba, ejecutar **solo el segundo archivo**. La CPU con celulares no necesita SQL adicional; la nueva vista `/watch` sí necesita esta segunda migración. No hay variables de entorno nuevas.
+En el proyecto existente, ejecutar el segundo archivo si todavía falta y ejecutar siempre el tercero. No hay variables de entorno nuevas.
 
 ## Supabase
 
@@ -58,6 +59,10 @@ Comprobar que los teléfonos pueden abrir la URL elegida. La protección del des
 ## Corrección del flujo de entrada
 
 La sala del operador ahora activa el motor automáticamente y muestra la cancha en esa misma ventana al iniciar. La corrección de preparación y reconexión **no requiere SQL ni variables nuevas**. Para visitantes de otras casas se conserva la migración de espectadores anterior. Tras desplegar, cerrar las ventanas de versiones anteriores y volver a abrir la app.
+
+## Corrección de autenticación Realtime
+
+Antes de crear un canal privado, el cliente espera que el JWT de la sesión quede instalado en Realtime. Si Supabase rechaza un canal, el control muestra si falló el estado, la entrada o la respuesta, junto con el detalle entregado por el servicio. Aplicar la tercera migración para restaurar las políticas alojadas y cerrar cualquier diferencia con el esquema del repositorio.
 
 ## Validación online pendiente
 

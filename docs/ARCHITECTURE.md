@@ -71,4 +71,6 @@ La intención de estar listo se puede marcar antes de tener conexión. El móvil
 
 `Player.start` prepara ambos suscriptores y los heartbeats antes de esperar sus conexiones, para permitir recuperación aunque una suscripción inicial falle. `Bus` reemplaza la promesa rechazada cuando Realtime vuelve a `SUBSCRIBED` y espera a que termine la eliminación de un canal antes de reutilizar su nombre. Esto evita tanto el bloqueo permanente de envíos como volver a suscribirse al objeto que el SDK aún estaba cerrando. Los errores de conexión llegan a la UI con opciones de reconexión.
 
+Antes de construir el primer canal privado, cada `Bus` espera que `realtime.setAuth` instale el JWT vigente. La API y Realtime dejan así de competir durante el inicio de una sesión anónima. Los errores muestran la etapa (`state`, entrada u respuesta) y el detalle acotado devuelto por Supabase. `202609090003_realtime_permissions.sql` vuelve a crear la función y las dos políticas Broadcast de manera idempotente para corregir instalaciones alojadas divergentes.
+
 La autorización de Realtime conserva lectura/escritura separadas. Supabase permite unirse con al menos un permiso de lectura o escritura; no fue necesario abrir políticas para resolver la recuperación: [documentación oficial](https://supabase.com/docs/guides/realtime/authorization).

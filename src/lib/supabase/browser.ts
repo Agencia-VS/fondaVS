@@ -2,6 +2,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let client: SupabaseClient | undefined;
 let sessionPromise: Promise<void> | undefined;
+let realtimeSessionPromise: Promise<void> | undefined;
 function publicKey() {
   return (
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
@@ -46,10 +47,37 @@ async function ensurePlayerSession() {
       const { error } = await s.auth.signInAnonymously();
       if (error) throw error;
     }
+    await synchronizeRealtimeSession();
   } catch (error) {
     if (error instanceof Error && error.message.includes('sala online todavía')) throw error;
     throw new Error(authFailureMessage(error));
   }
+}
+
+async function synchronizeRealtimeSession() {
+  const s = supabase();
+  const {
+    data: { session },
+    error,
+  } = await s.auth.getSession();
+  if (error) throw error;
+  if (!session) throw new Error('Inicia sesión para conectar la sala.');
+  // A private channel is authorized with the token included in its join
+  // payload. Wait until Realtime has that exact session before creating it;
+  // otherwise the HTTP API can recognize a member while its socket joins as
+  // the public API key and remains unauthorized.
+  await s.realtime.setAuth(session.access_token);
+}
+
+export function realtimeSession(): Promise<void> {
+  return (realtimeSessionPromise ??= synchronizeRealtimeSession()
+    .catch((error) => {
+      if (error instanceof Error && error.message.includes('Inicia sesión')) throw error;
+      throw new Error(authFailureMessage(error));
+    })
+    .finally(() => {
+      realtimeSessionPromise = undefined;
+    }));
 }
 export function playerSession(): Promise<void> {
   return (sessionPromise ??= ensurePlayerSession().finally(() => {
