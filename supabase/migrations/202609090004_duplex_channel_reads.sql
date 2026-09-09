@@ -1,6 +1,7 @@
--- FondaVS: ejecutar después de 202609090002_spectators.sql.
--- Restaura de forma idempotente la autorización de los canales privados.
--- Conserva salas, participantes, espectadores y resultados existentes.
+-- FondaVS: ejecutar después de 202609090003_realtime_permissions.sql.
+-- Supabase autoriza la lectura al suscribirse a un canal privado. El host y el
+-- jugador deben poder unirse a ambos canales del miembro aunque cada uno solo
+-- pueda enviar en una dirección. Conserva la escritura estrictamente dirigida.
 begin;
 
 create or replace function public.fonda_can_realtime(topic text,sending boolean) returns boolean
@@ -26,8 +27,9 @@ begin
       from public.fonda_members
       where id::text=parts[4] and room_id=r.id and active;
     if not found then return false; end if;
-    -- Supabase authorizes reads when either endpoint subscribes to the topic.
-    -- Writes remain directional even though both endpoints can join it.
+
+    -- Ambos extremos pueden suscribirse al canal privado del miembro.
+    -- Solo el jugador escribe en `in`; solo el operador escribe en `out`.
     if not sending then return r.owner_id=uid or m.user_id=uid; end if;
     if parts[3]='in' then return m.user_id=uid; end if;
     return r.owner_id=uid;
@@ -37,14 +39,5 @@ end $$;
 
 revoke all on function public.fonda_can_realtime(text,boolean) from public,anon;
 grant execute on function public.fonda_can_realtime(text,boolean) to authenticated;
-
-drop policy if exists fonda_broadcast_read on realtime.messages;
-drop policy if exists fonda_broadcast_send on realtime.messages;
-create policy fonda_broadcast_read on realtime.messages
-  for select to authenticated
-  using(extension='broadcast' and public.fonda_can_realtime(realtime.topic(),false));
-create policy fonda_broadcast_send on realtime.messages
-  for insert to authenticated
-  with check(extension='broadcast' and public.fonda_can_realtime(realtime.topic(),true));
 
 commit;
