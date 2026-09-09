@@ -55,15 +55,19 @@ Configurar las variables en el entorno Preview. Las variables `NEXT_PUBLIC_` se 
 
 Comprobar que los teléfonos pueden abrir la URL elegida. La protección del despliegue Preview podría mostrar una pantalla de acceso de Vercel antes del juego. El acceso al despliegue y los permisos de Supabase son controles distintos.
 
+## Corrección del flujo de entrada
+
+La sala del operador ahora activa el motor automáticamente y muestra la cancha en esa misma ventana al iniciar. La corrección de preparación y reconexión **no requiere SQL ni variables nuevas**. Para visitantes de otras casas se conserva la migración de espectadores anterior. Tras desplegar, cerrar las ventanas de versiones anteriores y volver a abrir la app.
+
 ## Validación online pendiente
 
-1. Entrar a `/operator`, crear una sala y abrir el host en una ventana visible.
-2. Conectar un celular, elegir equipo y tocar **Estoy listo**. Activar **Completar equipos libres con CPU** y comprobar que juegan tres CPU.
+1. Entrar a `/operator` desde el computador y crear una sala. Ver **Sala conectada** sin abrir otra ventana.
+2. Conectar un celular, elegir equipo y tocar **Estoy listo**. Esperar **Listo confirmado**, iniciar desde el computador y comprobar la cancha en la misma ventana con tres CPU.
 3. Cancelar o terminar, conectar un segundo celular y comprobar dos humanos y dos CPU. Terminar una práctica y verificar que no modifica el campeonato.
-4. Abrir el enlace de **Otra pantalla** en un computador de otra casa, sin la cuenta del operador. Verificar que muestra la misma partida y no ocupa equipo. Cerrar y reabrir esa vista: la principal debe seguir funcionando.
+4. Abrir el enlace de **Otra pantalla** en un computador de otra casa, sin la cuenta del operador. Verificar que muestra la misma partida y no ocupa equipo. Cerrar y reabrir esa vista: la sala del operador debe seguir funcionando.
 5. Conectar cuatro celulares, desactivar la CPU y verificar elecciones secretas en penales y rechazo de un quinto representante.
 6. Terminar una ronda con ensayo apagado y comprobar una única fila de resultado.
-7. Recargar el host y comprobar la conservación del marcador.
-8. Desconectar un control, reconectarlo y reanudar; cerrar el host y repetir la ronda incompleta.
+7. Recargar la sala del operador y comprobar la conservación del marcador.
+8. Entrar desde un celular antes de abrir el panel y marcar **Estoy listo**: debe confirmarse al abrir la sala, sin volver a pulsar. Desconectar un control, usar **Reconectar control** y reanudar; cerrar la sala del operador y repetir la ronda incompleta.
 
 La prueba SQL local no valida la configuración del servicio Realtime hospedado. Este ensayo debe pasar antes del evento.

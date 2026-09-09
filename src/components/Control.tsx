@@ -3,21 +3,24 @@ import { useEffect, useState } from 'react';
 import { Brand, ErrorMessage, Loading } from './Brand';
 import { GAMES, GAME_INFO, Game, TEAM_INFO, TEAMS } from '@/game/types';
 import { getRoom, isDemo, roomAction } from '@/lib/rooms';
-import { useLive } from '@/lib/realtime/use-live';
+import { useRoomHost } from '@/lib/realtime/use-room-host';
 import { ControlAction, Room } from '@/lib/room-types';
 import RoomQR from './RoomQR';
 import { Scoreboard } from './Scoreboard';
 import { DIFFICULTIES, DIFFICULTY_INFO, type Difficulty } from '@/game/cpu';
+import ProjectorScreen from './ProjectorScreen';
 export default function Control({ code }: { code: string }) {
   const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState('');
   const [game, setGame] = useState<Game>('penalties');
   const [practice, setPractice] = useState(true);
-  const [fillWithCpu, setFillWithCpu] = useState(false);
+  const [fillWithCpu, setFillWithCpu] = useState(true);
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState(false);
-  const { state, online, bus } = useLive(room);
+  const [showGame, setShowGame] = useState(false);
+  const session = useRoomHost(room);
+  const { state, online } = session;
   const demo = isDemo(code);
   useEffect(() => {
     let active = true;
@@ -32,18 +35,19 @@ export default function Control({ code }: { code: string }) {
           if (active) setError(e.message);
         });
     void refresh();
-    const interval = setInterval(refresh, 2500);
     return () => {
       active = false;
-      clearInterval(interval);
     };
   }, [code]);
   async function command(action: ControlAction) {
     setError('');
     setPending(true);
     try {
-      if (!online || !bus) throw new Error('Abre el proyector y espera a que se conecte.');
-      await bus.send('control', { kind: 'control', action });
+      if (action.type === 'start' && !online)
+        throw new Error('Espera a que la sala conecte o pulsa «Reconectar sala».');
+      await session.command(action);
+      if (action.type === 'start') setShowGame(true);
+      if (action.type === 'abort') setShowGame(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo enviar la instrucción.');
     } finally {
@@ -54,6 +58,7 @@ export default function Control({ code }: { code: string }) {
     try {
       const r = await roomAction(code, { action: 'release', memberId: id });
       setRoom(r);
+      await session.refresh();
       setError('');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo liberar el equipo.');
@@ -83,6 +88,43 @@ export default function Control({ code }: { code: string }) {
     members.length > 0 &&
     members.every((m) => m.online && m.ready) &&
     (fillWithCpu || TEAMS.every((t) => members.some((m) => m.team === t)));
+  const displayError = error || session.error;
+  const reconnect = () => {
+    if (active && !window.confirm('Reconectar la sala descarta esta ronda incompleta. ¿Continuar?'))
+      return;
+    setError('');
+    setShowGame(false);
+    session.reconnect();
+  };
+  const cancel = () => {
+    if (window.confirm('¿Cancelar esta ronda? No sumará puntos.')) void command({ type: 'abort' });
+  };
+  if (showGame)
+    return (
+      <>
+        <nav className="room-game-toolbar" aria-label="Controles del operador">
+          <button className="button secondary" onClick={() => setShowGame(false)}>
+            {round?.phase === 'finished' ? 'Elegir otro juego' : 'Volver al panel'}
+          </button>
+          <span>Tu celular es el control. Esta pantalla mantiene la partida.</span>
+          {active && (
+            <>
+              <button
+                className="button primary"
+                disabled={pending}
+                onClick={() => void command({ type: round.pausedAt !== null ? 'resume' : 'pause' })}
+              >
+                {round.pausedAt !== null ? 'Reanudar' : 'Pausar'}
+              </button>
+              <button className="button secondary" disabled={pending} onClick={cancel}>
+                Cancelar ronda
+              </button>
+            </>
+          )}
+        </nav>
+        <ProjectorScreen code={code} state={state} error={displayError} onReconnect={reconnect} />
+      </>
+    );
   return (
     <main className="control-page">
       <header className="topbar">
@@ -90,7 +132,7 @@ export default function Control({ code }: { code: string }) {
         <span className="eyebrow">MESA DEL OPERADOR</span>
         <span className={`connection ${online ? 'connected' : ''}`}>
           <i />
-          {online ? 'Proyector conectado' : 'Proyector sin conectar'}
+          {online ? 'Sala conectada' : 'Conectando sala'}
         </span>
       </header>
       {demo && (
@@ -102,19 +144,41 @@ export default function Control({ code }: { code: string }) {
         <div>
           <span className="eyebrow">BIENVENIDOS A LA CANCHA</span>
           <h1>
-            Tu sala está <em>lista.</em>
+            Prepara tu <em>partida.</em>
           </h1>
         </div>
-        <a
-          className="button primary"
-          href={`/host/${code}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Abrir proyector ↗
-        </a>
+        <button className="button primary" onClick={() => setShowGame(true)}>
+          Ver cancha en esta pantalla →
+        </button>
       </div>
-      <ErrorMessage message={error} />
+      <ol className="room-steps" aria-label="Pasos para jugar">
+        <li>
+          <b>1. Sala abierta</b>
+          <span>
+            {online ? 'Este computador ya está conectado.' : 'Conectando este computador…'}
+          </span>
+        </li>
+        <li>
+          <b>2. Conecta los celulares</b>
+          <span>Escanea el QR, elige equipo y toca «Estoy listo».</span>
+        </li>
+        <li>
+          <b>3. Inicia el juego</b>
+          <span>La cancha aparecerá aquí. Mantén esta ventana visible.</span>
+        </li>
+      </ol>
+      <ErrorMessage message={displayError} />
+      {(!online || session.error) && (
+        <div className="room-reconnect">
+          <p>
+            Esta sala se activa automáticamente. Si otra ventana ya la administra, vuelve a esa
+            ventana o ciérrala y espera 6 segundos antes de reconectar.
+          </p>
+          <button className="button secondary" onClick={reconnect}>
+            Reconectar sala
+          </button>
+        </div>
+      )}
       {state?.notice && (
         <p className="info-message" role="status">
           {state.notice}
@@ -175,7 +239,7 @@ export default function Control({ code }: { code: string }) {
                   </select>
                 </label>
                 <p className="hint">
-                  Cada persona usa su celular y mira el proyector. La CPU ocupa solo las plazas
+                  Cada persona usa su celular y mira esta pantalla. La CPU ocupa solo las plazas
                   libres al iniciar; esta práctica no suma al campeonato.
                 </p>
               </>
@@ -219,14 +283,7 @@ export default function Control({ code }: { code: string }) {
                 >
                   {round.pausedAt !== null ? 'Reanudar' : 'Pausar'}
                 </button>
-                <button
-                  className="button secondary"
-                  disabled={pending}
-                  onClick={() => {
-                    if (window.confirm('¿Cancelar esta ronda? No sumará puntos.'))
-                      void command({ type: 'abort' });
-                  }}
-                >
+                <button className="button secondary" disabled={pending} onClick={cancel}>
                   Cancelar ronda
                 </button>
               </div>
@@ -252,7 +309,7 @@ export default function Control({ code }: { code: string }) {
             </p>
           </section>
           <section className="paper-panel remote-screen-panel">
-            <h2>Otra pantalla</h2>
+            <h2>Otra pantalla (opcional)</h2>
             <p>
               Para jugar desde casas distintas, comparte esta vista del proyector. La otra persona
               la abre en su computador y usa su celular como control.

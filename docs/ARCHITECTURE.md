@@ -37,7 +37,7 @@ La concesión de host dura seis segundos y se renueva cada dos. El motor deja de
 
 Resultado único por ronda y transición a espera se confirman en una transacción. Los ensayos no crean resultados y tienen referencia de confirmación para admitir reintentos.
 
-Ocultar la ventana del host pausa. Perder su transporte exige cancelar y repetir la ronda incompleta. Cerrar el host conserva únicamente el campeonato confirmado. El organizador es confiable: esta arquitectura no proporciona arbitraje remoto independiente.
+Ocultar la ventana de la sala del operador pausa. Perder su transporte exige cancelar y repetir la ronda incompleta. Cerrar el host conserva únicamente el campeonato confirmado. El organizador es confiable: esta arquitectura no proporciona arbitraje remoto independiente.
 
 Los tests SQL ejecutan la migración en PGlite, con `auth.uid` y `realtime.topic` simulados. La conexión al servicio real sigue requiriendo validación.
 
@@ -49,7 +49,9 @@ Solo los participantes humanos deben enviar heartbeats. Perder uno pausa la rond
 
 ## Pantallas compartidas
 
-`/host/[code]` sigue siendo la única autoridad y mantiene su concesión. `/watch/[code]` monta `WatchScreen`, que registra al visitante mediante la API y se suscribe al estado público. `ProjectorScreen` comparte el Canvas, temporizadores, marcador y audio entre ambas vistas. Una pantalla compartida no ejecuta el motor, CPU ni comandos del operador; su visibilidad no pausa al host.
+`/control/[code]` monta un único `Host` mediante `useRoomHost` en cuanto el operador abre la sala. El panel usa el estado local y llama directamente a `Host.control`; no monta otro Bus con los mismos canales del cliente Supabase. Cambiar entre panel y cancha solo cambia la vista, sin remontar el motor ni tomar otra concesión.
+
+`/watch/[code]` y la ruta anterior `/host/[code]` montan `WatchScreen`: los visitantes nuevos se registran mediante la API; dueños y jugadores ya tienen acceso al estado. `ProjectorScreen` comparte Canvas, temporizadores, marcador y audio con la cancha del operador. Una vista adicional no ejecuta motor, CPU ni comandos, y su visibilidad no pausa la sala.
 
 La migración `202609090002_spectators.sql` añade `fonda_spectators`. Solo la API con credencial de servidor registra el `user.id` del JWT verificado, para la sala del enlace. RLS concede únicamente recepción de `state`; no envío, acceso a elecciones privadas, canales de controles ni concesión del host. Los visitantes pueden usar sesiones anónimas y no consumen plazas de equipo.
 
@@ -62,3 +64,11 @@ La ruta `/solo` ejecuta `SoloSession` en el navegador: reutiliza el motor de reg
 Las semillas de los rivales son independientes de la semilla del tablero. El programador de CPU usa tiempos y acciones del mismo motor: no modifica pasos, cartas ni puntajes directamente. Cada CPU mantiene su propia memoria limitada de cartas vistas. `GamePad` y `controlState` se comparten con los celulares para conservar reglas y controles consistentes.
 
 El reloj avanza cada 50 ms; Canvas dibuja por `requestAnimationFrame`. Al ocultar la pestaña se pausa explícitamente y la reanudación desplaza los plazos del motor. Los resultados se registran una sola vez por ID en el estado de React y se descartan al recargar; nunca se confirman mediante la API del campeonato.
+
+## Preparación y recuperación del control
+
+La intención de estar listo se puede marcar antes de tener conexión. El móvil conserva esa intención al reconstruir el controlador y solo muestra confirmación cuando hay conexión y el estado del host incluye su miembro con `ready: true`. La autoridad sigue exigiendo heartbeats recientes de todos los humanos para iniciar.
+
+`Player.start` prepara ambos suscriptores y los heartbeats antes de esperar sus conexiones, para permitir recuperación aunque una suscripción inicial falle. `Bus` reemplaza la promesa rechazada cuando Realtime vuelve a `SUBSCRIBED` y espera a que termine la eliminación de un canal antes de reutilizar su nombre. Esto evita tanto el bloqueo permanente de envíos como volver a suscribirse al objeto que el SDK aún estaba cerrando. Los errores de conexión llegan a la UI con opciones de reconexión.
+
+La autorización de Realtime conserva lectura/escritura separadas. Supabase permite unirse con al menos un permiso de lectura o escritura; no fue necesario abrir políticas para resolver la recuperación: [documentación oficial](https://supabase.com/docs/guides/realtime/authorization).

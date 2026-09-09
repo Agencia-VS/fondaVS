@@ -4,7 +4,7 @@ Cuatro equipos, un proyector y celulares como controles. MVP de fonda para **Cre
 
 ## Incluido
 
-- Lobby con código/QR, plazas exclusivas y panel de operador.
+- Sala del operador con código/QR, plazas exclusivas y cancha en la misma ventana. Se activa al abrirla.
 - Carrera de sacos, rayuela, penales con playoff y memorice.
 - Ensayos sin puntos, ranking, pausa y cancelación de rondas.
 - Acciones con confirmación, deduplicación y canales privados.
@@ -28,7 +28,7 @@ npm run dev
 
 Abre `http://localhost:3000` y selecciona **Jugar contra la CPU** (ruta `/solo`). Elige equipo, juego y dificultad: puedes jugar inmediatamente, sin variables de entorno ni Supabase. Los resultados se acumulan solo en esa página y se reinician al recargar. [Guía de uso](docs/USAGE.md).
 
-Para revisar el flujo del evento, selecciona **Explorar la demo**. Desde el panel abre el proyector y entre uno y cuatro controles. Cada control elige equipo y toca **Estoy listo**. Activa **Completar equipos libres con CPU** si hay menos de cuatro personas.
+Para revisar el flujo del evento, selecciona **Explorar la demo**. La sala conecta automáticamente. Abre entre uno y cuatro controles desde el panel; al iniciar, la cancha aparece en esa misma ventana. Cada control elige equipo y toca **Estoy listo**. **Completar equipos libres con CPU** viene activado para practicar con menos de cuatro personas.
 
 La demo usa BroadcastChannel y almacenamiento local. **Funciona entre pestañas del mismo navegador/origen; no conecta teléfonos distintos ni es un modo offline de producción.** Sus datos nunca se guardan en Supabase.
 
@@ -54,10 +54,12 @@ Importar el repositorio en Vercel, preset Next.js, Node 22.x, instalación `npm 
 | `/`               | Entrada por código o demo                         |
 | `/solo`           | Un jugador y tres CPU, cancha y controles juntos  |
 | `/operator`       | Acceso del operador                               |
-| `/control/[code]` | Administración y selección de juegos              |
-| `/host/[code]`    | Proyector y autoridad de la partida               |
+| `/control/[code]` | Sala activa, administración y cancha              |
+| `/host/[code]`    | Vista adicional (enlaces anteriores)              |
 | `/watch/[code]`   | Vista compartida del proyector, sin ocupar equipo |
 | `/play/[code]`    | Equipo y control móvil                            |
+
+«Estoy listo» puede marcarse mientras conecta. «Listo confirmado» aparece cuando la sala recibe la preparación. El celular ofrece **Reconectar control**, y el panel **Reconectar sala**. Esta corrección no añade SQL ni variables.
 
 ## Verificación
 
@@ -81,6 +83,6 @@ El computador del organizador valida las reglas. Supabase transporta eventos y c
 - [Arquitectura y recuperación](docs/ARCHITECTURE.md)
 - [Guía del operador](docs/OPERATIONS.md)
 
-La ventana de host debe permanecer visible y el computador despierto. Si se cierra, se conservan los resultados confirmados y se repite la ronda incompleta. Un corte del transporte requiere cancelar esa ronda; un control desconectado pausa hasta reconectar.
+La ventana de la sala del operador (`/control`) debe permanecer visible y el computador despierto. Al pulsar **Iniciar juego**, esa misma ventana muestra la cancha; las vistas adicionales (`/watch` y `/host`) solo observan. Si se cierra, se conservan los resultados confirmados y se repite la ronda incompleta. Un corte del transporte requiere cancelar esa ronda; un control desconectado pausa hasta reconectar.
 
 Rayuela puntúa al llegar el comando al host y sigue siendo sensible a la red. El operador es confiable en este modelo; no es un sistema con arbitraje independiente para premios monetarios. No hay migración automática de host ni respaldo offline de la sala online.

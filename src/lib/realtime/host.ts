@@ -41,6 +41,9 @@ export class Host {
     private onError: (error: string) => void,
     private instance = crypto.randomUUID(),
   ) {}
+  get connected() {
+    return !this.stopped && !this.networkLost && Date.now() - this.leaseAt < 5000;
+  }
   async start() {
     this.room = await roomAction(this.code, { action: 'claim', instance: this.instance });
     if (this.stopped) return;
@@ -66,7 +69,7 @@ export class Host {
   private visibility = () => {
     if (document.hidden && this.round && this.round.phase !== 'finished') {
       this.round = pauseRound(this.round, Date.now());
-      this.notice = 'El proyector quedó en segundo plano. Vuelve a mostrarlo y reanuda.';
+      this.notice = 'La sala del operador quedó en segundo plano. Vuelve a mostrarla y reanuda.';
       this.publish();
     }
   };
