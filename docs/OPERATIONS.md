@@ -9,6 +9,10 @@
 
 El panel permite elegir, iniciar, pausar, reanudar y cancelar. Para repetir una ronda incompleta, cancelarla primero. La cruz junto a un equipo libera su plaza entre rondas; el antiguo representante debe volver a entrar si quiere una nueva sesión.
 
+El operador puede jugar desde su propio celular. Para ensayar con menos personas, activar **Completar equipos libres con CPU**: con uno o dos celulares listos se juega contra tres o dos CPU, respectivamente. Estas rondas no suman al campeonato. Para el evento de cuatro equipos humanos, desactivar esta opción.
+
+Si los jugadores están en casas distintas, usar **Otra pantalla → Copiar enlace de pantalla**. Cada invitado abre esa vista en su computador y entra al mismo código desde su celular. Solo se abre un **proyector principal**; las demás pantallas usan el enlace compartido y pueden cerrarse sin detener la partida. Requiere la migración `202609090002_spectators.sql`. Ver [guía de uso](USAGE.md).
+
 Si un teléfono se desconecta, reconectarlo y reanudar. Si falla el transporte del host, cancelar y repetir cuando la red esté estable. Si se cierra el host, abrirlo de nuevo, esperar el vencimiento de la concesión anterior y repetir la ronda incompleta. Los puntos confirmados se conservan.
 
 ## Validación presencial pendiente

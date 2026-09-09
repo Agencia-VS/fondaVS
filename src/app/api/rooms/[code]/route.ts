@@ -24,6 +24,7 @@ const placements = z
   .length(4)
   .refine((x) => new Set(x.map((p) => p.team)).size === 4);
 const input = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('watch') }),
   z.object({
     action: z.literal('join'),
     team: z.enum(TEAMS),
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest, ctx: Context) {
     const p = parsed.data;
     const db = database();
     const r = await roomRow(code);
-    if (p.action !== 'join') {
+    if (p.action !== 'join' && p.action !== 'watch') {
       operator(user);
       if (r.owner_id !== user.id)
         throw new ApiError('Solo el dueño de esta sala puede administrarla.', 403);
@@ -83,7 +84,19 @@ export async function POST(req: NextRequest, ctx: Context) {
         p_team: p.team,
         p_name: p.nickname,
       }));
-    else if (p.action === 'claim')
+    else if (p.action === 'watch') {
+      ({ error } = await db.from('fonda_spectators').upsert(
+        { room_id: r.id, user_id: user.id },
+        {
+          onConflict: 'room_id,user_id',
+        },
+      ));
+      if (error)
+        throw new ApiError(
+          'No se pudo abrir la pantalla compartida. El operador debe comprobar la migración de espectadores en Supabase.',
+          503,
+        );
+    } else if (p.action === 'claim')
       ({ error } = await db.rpc('fonda_claim_host', {
         p_room: r.id,
         p_user: user.id,

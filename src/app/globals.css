@@ -582,6 +582,41 @@ input {
   color: var(--muted);
   font-weight: 400;
 }
+.cpu-settings {
+  padding: 18px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  background: var(--paper-light);
+}
+.cpu-difficulty {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.cpu-difficulty select {
+  padding: 10px 14px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+.remote-screen-panel {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.remote-screen-panel p,
+.remote-screen-panel small {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.remote-screen-panel .button {
+  white-space: normal;
+}
 .hint {
   display: block;
   margin-top: 16px;

@@ -1,15 +1,15 @@
 # Arquitectura
 
-| Módulo                       | Responsabilidad                                           |
-| ---------------------------- | --------------------------------------------------------- |
-| `src/game`                   | Reglas puras, tiempos, clasificación y proyección pública |
-| `src/lib/realtime/host.ts`   | Autoridad de partida y confirmación de resultados         |
-| `src/lib/realtime/player.ts` | Cola de acciones, reintentos y respuesta del control      |
-| `src/lib/realtime/bus.ts`    | Supabase Broadcast o demo explícita con BroadcastChannel  |
-| `src/app/api/rooms`          | JWT, rol y operaciones breves de gestión                  |
-| `supabase/migrations`        | Integridad SQL, RLS y concesión de host                   |
-| `src/components/stage`       | Renderizado Canvas local, separado del móvil              |
-| `src/components/stage/scene25d.ts` | Capas de profundidad 2.5D y sombras sin runtime 3D |
+| Módulo                             | Responsabilidad                                           |
+| ---------------------------------- | --------------------------------------------------------- |
+| `src/game`                         | Reglas puras, tiempos, clasificación y proyección pública |
+| `src/lib/realtime/host.ts`         | Autoridad de partida y confirmación de resultados         |
+| `src/lib/realtime/player.ts`       | Cola de acciones, reintentos y respuesta del control      |
+| `src/lib/realtime/bus.ts`          | Supabase Broadcast o demo explícita con BroadcastChannel  |
+| `src/app/api/rooms`                | JWT, rol y operaciones breves de gestión                  |
+| `supabase/migrations`              | Integridad SQL, RLS y concesión de host                   |
+| `src/components/stage`             | Renderizado Canvas local, separado del móvil              |
+| `src/components/stage/scene25d.ts` | Capas de profundidad 2.5D y sombras sin runtime 3D        |
 
 No hay estado vivo de sala en memoria de Vercel Functions. El computador del organizador ejecuta el motor y genera los sprites mediante código.
 
@@ -40,6 +40,20 @@ Resultado único por ronda y transición a espera se confirman en una transacci�
 Ocultar la ventana del host pausa. Perder su transporte exige cancelar y repetir la ronda incompleta. Cerrar el host conserva únicamente el campeonato confirmado. El organizador es confiable: esta arquitectura no proporciona arbitraje remoto independiente.
 
 Los tests SQL ejecutan la migración en PGlite, con `auth.uid` y `realtime.topic` simulados. La conexión al servicio real sigue requiriendo validación.
+
+## CPU en salas con controles móviles
+
+`Host` crea un `CpuPlayer` por equipo libre al iniciar una práctica con CPU. La lista humana se fija con los miembros devueltos por `begin`, después del bloqueo de la sala; se vuelve a comprobar que estén listos para evitar que una incorporación concurrente comparta equipo con un bot. Los bots usan el mismo motor y reciben exclusivamente `PublicRound`. No se crean usuarios ni miembros de Supabase para ellos.
+
+Solo los participantes humanos deben enviar heartbeats. Perder uno pausa la ronda; nunca lo reemplaza automáticamente un bot. Cancelar descarta las instancias CPU y permite cambiar participantes. El host fuerza `practice: true` al usar esta opción y el SQL existente confirma la práctica sin insertar resultados del campeonato.
+
+## Pantallas compartidas
+
+`/host/[code]` sigue siendo la única autoridad y mantiene su concesión. `/watch/[code]` monta `WatchScreen`, que registra al visitante mediante la API y se suscribe al estado público. `ProjectorScreen` comparte el Canvas, temporizadores, marcador y audio entre ambas vistas. Una pantalla compartida no ejecuta el motor, CPU ni comandos del operador; su visibilidad no pausa al host.
+
+La migración `202609090002_spectators.sql` añade `fonda_spectators`. Solo la API con credencial de servidor registra el `user.id` del JWT verificado, para la sala del enlace. RLS concede únicamente recepción de `state`; no envío, acceso a elecciones privadas, canales de controles ni concesión del host. Los visitantes pueden usar sesiones anónimas y no consumen plazas de equipo.
+
+Las vistas ajustan los relojes de dibujo y temporizadores según `sentAt` del host. Esto corrige diferencias del reloj del computador, pero no elimina el retraso de transporte. Después de cuatro segundos sin estado una vista muestra espera de conexión. Las escenas siguen llegando desde el host, sin emisión de vídeo ni un segundo motor que pueda divergir.
 
 ## Modo individual
 

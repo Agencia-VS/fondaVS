@@ -62,6 +62,11 @@ export default function Operator() {
           <em>operador.</em>
         </h1>
         <p>Prepara la sala, conecta los equipos y lleva el ritmo de la fonda.</p>
+        <p className="hint">
+          Aquí creas la sala, eliges juegos y administras las pausas. Para practicar, puedes
+          completar los equipos libres con CPU. También puedes compartir una vista del proyector con
+          quienes estén en otra casa.
+        </p>
         {!configured() ? (
           <div className="info-message">
             La sala online está pendiente de configuración. Mientras tanto puedes{' '}

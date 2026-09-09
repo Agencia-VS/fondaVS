@@ -148,6 +148,10 @@ export default function SoloScreen() {
           Elige tu área. Los otros tres equipos ponen los rivales.
           <br />
           Juega aquí mismo, con teclado o tocando los botones.
+          <br />
+          <Link href="/operator" className="text-link">
+            Jugar con celulares y proyector →
+          </Link>
         </p>
       </div>
 

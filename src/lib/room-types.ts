@@ -1,4 +1,5 @@
 import type { Game, PublicRound, ResultRecord, Team } from '@/game/types';
+import type { Difficulty } from '@/game/cpu';
 export type Member = { id: string; team: Team; nickname: string };
 export type Room = {
   id: string;
@@ -16,12 +17,14 @@ export type LiveState = {
   sentAt: number;
   round: PublicRound | null;
   members: (Member & { online: boolean; ready: boolean })[];
+  cpuTeams: Team[];
+  cpuDifficulty: Difficulty | null;
   results: ResultRecord[];
   saving: boolean;
   notice: string;
 };
 export type ControlAction =
-  | { type: 'start'; game: Game; practice: boolean }
+  | { type: 'start'; game: Game; practice: boolean; cpu?: Difficulty }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'abort' };

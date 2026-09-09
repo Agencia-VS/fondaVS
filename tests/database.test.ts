@@ -23,6 +23,12 @@ beforeAll(async () => {
   await db.exec(
     readFileSync(new URL('../supabase/migrations/202609090001_fonda.sql', import.meta.url), 'utf8'),
   );
+  const spectatorsSql = readFileSync(
+    new URL('../supabase/migrations/202609090002_spectators.sql', import.meta.url),
+    'utf8',
+  );
+  await db.exec(spectatorsSql);
+  await db.exec(spectatorsSql); // The follow-up migration is safe to run again.
   const r = await db.query<{ id: string }>(
     'insert into fonda_rooms(code,owner_id) values ($1,$2) returning id',
     ['ABC234', owner],
@@ -152,5 +158,52 @@ describe('Postgres room integrity and realtime permissions', () => {
         '{}',
       ]),
     ).rejects.toThrow('venció');
+  });
+  it('allows spectators to receive only their room state without reserving a team', async () => {
+    const viewer = '44444444-4444-4444-8444-444444444444';
+    await db.query('insert into auth.users values ($1)', [viewer]);
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [viewer]);
+    const allowed = async (topic: string, sending: boolean) =>
+      (
+        await db.query<{ ok: boolean }>('select fonda_can_realtime($1,$2) as ok', [
+          `fonda:${room}:${topic}`,
+          sending,
+        ])
+      ).rows[0].ok;
+    expect(await allowed('state', false)).toBe(false);
+    const before = (await db.query('select * from fonda_members')).rows.length;
+    await db.query('insert into fonda_spectators(room_id,user_id) values($1,$2)', [room, viewer]);
+    expect((await db.query('select * from fonda_members')).rows).toHaveLength(before);
+    expect(await allowed('state', false)).toBe(true);
+    expect(await allowed('state', true)).toBe(false);
+    for (const sending of [true, false]) {
+      for (const topic of ['control', `in:${rival}`, `out:${rival}`])
+        expect(await allowed(topic, sending)).toBe(false);
+    }
+    const other = await db.query<{ id: string }>(
+      'insert into fonda_rooms(code,owner_id) values ($1,$2) returning id',
+      ['XYZ789', owner],
+    );
+    expect(
+      (
+        await db.query<{ ok: boolean }>('select fonda_can_realtime($1,false) as ok', [
+          `fonda:${other.rows[0].id}:state`,
+        ])
+      ).rows[0].ok,
+    ).toBe(false);
+    await db.exec('set role authenticated');
+    try {
+      await expect(
+        db.query('insert into fonda_spectators(room_id,user_id) values($1,$2)', [
+          other.rows[0].id,
+          viewer,
+        ]),
+      ).rejects.toThrow('permission denied');
+    } finally {
+      await db.exec('reset role');
+    }
+    await expect(
+      db.query('select * from fonda_claim_host($1,$2,$3)', [room, viewer, 'watcher']),
+    ).rejects.toThrow('Solo el operador');
   });
 });
