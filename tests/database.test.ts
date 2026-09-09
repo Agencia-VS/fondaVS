@@ -35,6 +35,12 @@ beforeAll(async () => {
   );
   await db.exec(realtimeSql);
   await db.exec(realtimeSql); // Restoring the policies is also idempotent.
+  const duplexChannelsSql = readFileSync(
+    new URL('../supabase/migrations/202609090004_duplex_channel_reads.sql', import.meta.url),
+    'utf8',
+  );
+  await db.exec(duplexChannelsSql);
+  await db.exec(duplexChannelsSql); // The channel-read correction is idempotent.
   const r = await db.query<{ id: string }>(
     'insert into fonda_rooms(code,owner_id) values ($1,$2) returning id',
     ['ABC234', owner],
@@ -77,13 +83,29 @@ describe('Postgres room integrity and realtime permissions', () => {
         ])
       ).rows[0].ok;
     expect(await allowed(`in:${member}`, true)).toBe(true);
+    expect(await allowed(`in:${member}`, false)).toBe(true);
     expect(await allowed(`in:${rival}`, true)).toBe(false);
     expect(await allowed(`in:${rival}`, false)).toBe(false);
     expect(await allowed(`out:${rival}`, false)).toBe(false);
     expect(await allowed(`out:${member}`, false)).toBe(true);
+    expect(await allowed(`out:${member}`, true)).toBe(false);
     expect(await allowed('state', false)).toBe(true);
     expect(await allowed('state', true)).toBe(false);
     expect(await allowed('control', true)).toBe(false);
+  });
+  it('lets the host subscribe to both member channels but preserves directional writes', async () => {
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [owner]);
+    const allowed = async (topic: string, send: boolean) =>
+      (
+        await db.query<{ ok: boolean }>('select fonda_can_realtime($1,$2) as ok', [
+          `fonda:${room}:${topic}`,
+          send,
+        ])
+      ).rows[0].ok;
+    expect(await allowed(`in:${member}`, false)).toBe(true);
+    expect(await allowed(`in:${member}`, true)).toBe(false);
+    expect(await allowed(`out:${member}`, false)).toBe(true);
+    expect(await allowed(`out:${member}`, true)).toBe(true);
   });
   it('denies direct player writes and privileged function execution', async () => {
     await db.exec('set role authenticated');

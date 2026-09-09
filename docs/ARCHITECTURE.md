@@ -55,6 +55,8 @@ Solo los participantes humanos deben enviar heartbeats. Perder uno pausa la rond
 
 La migración `202609090002_spectators.sql` añade `fonda_spectators`. Solo la API con credencial de servidor registra el `user.id` del JWT verificado, para la sala del enlace. RLS concede únicamente recepción de `state`; no envío, acceso a elecciones privadas, canales de controles ni concesión del host. Los visitantes pueden usar sesiones anónimas y no consumen plazas de equipo.
 
+Los canales privados `in:<member>` y `out:<member>` admiten suscripción únicamente del operador y del jugador propietario. La escritura sigue siendo direccional: jugador → `in` y operador → `out`. Esta lectura dúplex es necesaria porque Supabase evalúa el permiso de lectura al suscribir cada extremo al tópico, incluso si ese extremo lo utiliza principalmente para enviar.
+
 Las vistas ajustan los relojes de dibujo y temporizadores según `sentAt` del host. Esto corrige diferencias del reloj del computador, pero no elimina el retraso de transporte. Después de cuatro segundos sin estado una vista muestra espera de conexión. Las escenas siguen llegando desde el host, sin emisión de vídeo ni un segundo motor que pueda divergir.
 
 ## Modo individual
