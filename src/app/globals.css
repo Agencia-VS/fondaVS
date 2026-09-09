@@ -1647,3 +1647,370 @@ input {
     scroll-behavior: auto !important;
   }
 }
+.solo-home-link {
+  margin: 22px 12px 0 0;
+}
+.solo-page {
+  padding: 0 max(24px, calc((100vw - 1380px) / 2));
+}
+.solo-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 30px 0;
+}
+.solo-intro h1 {
+  font-size: clamp(36px, 4vw, 62px);
+  letter-spacing: -2px;
+  margin: 12px 0 0;
+}
+.solo-intro p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+}
+.solo-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 40px;
+  padding: 30px;
+  border: 1px solid var(--line);
+  background: var(--paper-light);
+  margin-bottom: 36px;
+}
+.solo-setup h2 {
+  font: 12px monospace;
+  color: var(--muted);
+  margin: 0 0 22px;
+}
+.solo-setup h2 span {
+  font: 800 20px sans-serif;
+  color: var(--ink);
+  margin-left: 10px;
+}
+.solo-setup .team-options {
+  margin: 0 0 24px;
+}
+.solo-difficulty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.solo-difficulty select {
+  padding: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  font: inherit;
+  min-width: 140px;
+}
+.solo-rules {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 22px 0 0;
+  min-height: 44px;
+}
+.solo-arena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+  scroll-margin-top: 20px;
+  margin-bottom: 36px;
+}
+.solo-field {
+  border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 #d5d4bc;
+  min-width: 0;
+}
+.solo-stage {
+  position: relative;
+}
+.solo-stage .stage-overlay h2 {
+  font-size: clamp(20px, 3vw, 36px);
+}
+.solo-stage .stage-overlay p {
+  margin: 0 0 16px;
+}
+.solo-stage .stage-overlay {
+  padding: 15px;
+  color: var(--paper);
+}
+.solo-roster {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 8px;
+  gap: 8px;
+}
+.solo-roster > span {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.solo-roster i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--team);
+  margin-right: 6px;
+}
+.solo-roster small {
+  display: block;
+  margin-top: 6px;
+  font: 9px monospace;
+  color: #acbeb1;
+}
+.solo-roster .human small {
+  color: var(--team);
+}
+.solo-controller {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 22px;
+  min-width: 0;
+}
+.solo-control-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.solo-control-heading .eyebrow {
+  color: #acbeb1;
+  font-size: 9px;
+}
+.solo-control-heading h2 {
+  font-size: 25px;
+  color: var(--team);
+  margin: 5px 0 0;
+}
+.solo-timer {
+  font: 800 35px monospace;
+  text-align: right;
+}
+.solo-timer small {
+  display: block;
+  font: 9px monospace;
+  color: #acbeb1;
+}
+.solo-turn {
+  min-height: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 18px 0 0;
+}
+.solo-controller .controller-pad {
+  margin: 20px 0;
+}
+.solo-controller .goal-pad {
+  grid-template-rows: repeat(3, 66px);
+  padding: 8px;
+  gap: 8px;
+}
+.solo-controller .goal-pad .pad-button {
+  min-height: 0;
+}
+.solo-controller .goal-pad .pad-button span {
+  font-size: 28px;
+}
+.solo-controller .race-buttons .pad-button {
+  height: 140px;
+}
+.solo-controller .race-buttons .pad-button > span {
+  font-size: 44px;
+}
+.solo-controller .race-progress > span {
+  font-size: 30px;
+  margin-bottom: 16px;
+}
+.solo-controller .throw-button {
+  min-height: 195px;
+  font-size: 28px;
+}
+.solo-controller .throw-button > span {
+  font-size: 54px;
+  margin-bottom: 16px;
+}
+.solo-controller .dpad {
+  grid-template-rows: repeat(3, 48px);
+  grid-template-columns: repeat(3, 54px);
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.solo-controller .dpad .pad-button {
+  font-size: 22px;
+  padding: 4px;
+}
+.solo-controller .memory-selection span {
+  float: none;
+  display: block;
+  margin-top: 6px;
+}
+.solo-controller .flip-button {
+  min-height: 48px;
+  font-size: 16px;
+  padding: 10px;
+}
+.solo-keyboard {
+  font: 11px/1.7 monospace;
+  color: #acbeb1;
+}
+.solo-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #506d69;
+  padding-top: 16px;
+}
+.solo-actions button {
+  background: transparent;
+  border: 0;
+  color: var(--paper);
+  padding: 8px 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-size: 12px;
+  min-height: 44px;
+}
+.solo-welcome,
+.solo-result {
+  padding: 24px;
+  border: 1px solid var(--line);
+}
+.solo-welcome h2,
+.solo-result h2 {
+  font-size: 29px;
+  line-height: 1.25;
+  letter-spacing: -1px;
+}
+.solo-welcome p,
+.solo-result p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.solo-result .results-list {
+  width: 100%;
+  font-size: 12px;
+}
+.solo-result .results-list strong {
+  color: var(--ink);
+}
+.solo-score {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: center;
+  gap: 30px;
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+}
+.solo-score p {
+  font-size: 12px;
+  color: var(--muted);
+}
+@media (max-width: 900px) {
+  .solo-intro {
+    display: block;
+  }
+  .solo-intro p {
+    margin-top: 16px;
+  }
+  .solo-setup {
+    gap: 24px;
+    padding: 24px;
+  }
+  .solo-arena {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 16px;
+  }
+  .solo-controller {
+    padding: 16px;
+  }
+}
+@media (max-width: 700px) {
+  .solo-page {
+    padding: 0 16px;
+  }
+  .solo-page .topbar {
+    gap: 12px;
+  }
+  .solo-page .edition {
+    display: none;
+  }
+  .solo-page .topbar .text-link {
+    font-size: 11px;
+  }
+  .solo-setup {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px;
+  }
+  .solo-setup .game-card {
+    padding: 14px;
+    min-height: 132px;
+  }
+  .solo-setup .game-card-name {
+    font-size: 18px;
+  }
+  .solo-arena {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    scroll-margin-top: 8px;
+  }
+  .solo-controller {
+    padding: 16px;
+  }
+  .solo-controller .controller-pad {
+    margin: 12px 0;
+  }
+  .solo-controller .goal-pad {
+    grid-template-rows: repeat(3, 50px);
+    max-width: 330px;
+    margin: auto;
+  }
+  .solo-control-heading h2 {
+    font-size: 21px;
+  }
+  .solo-turn {
+    margin-top: 10px;
+  }
+  .solo-controller .race-buttons .pad-button {
+    height: 100px;
+  }
+  .solo-controller .throw-button {
+    min-height: 115px;
+  }
+  .solo-controller .throw-button > span {
+    display: none;
+  }
+  .solo-keyboard {
+    margin: 10px 0;
+    font-size: 10px;
+  }
+  .solo-actions {
+    padding-top: 4px;
+  }
+  .solo-roster > span {
+    font-size: 10px;
+  }
+  .solo-score {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .solo-page .stage-top {
+    font-size: 9px;
+    padding: 12px;
+  }
+  .solo-page .stage-top .pixel-label {
+    font-size: 8px;
+  }
+  .solo-page .home-footer {
+    gap: 12px;
+  }
+}

@@ -9,6 +9,7 @@ Cuatro equipos, un proyector y celulares como controles. MVP de fonda para **Cre
 - Ensayos sin puntos, ranking, pausa y cancelación de rondas.
 - Acciones con confirmación, deduplicación y canales privados.
 - Resultados confirmados persistentes y concesión de host única.
+- Modo individual contra tres CPU: cuatro juegos, tres dificultades, teclado y controles táctiles en una pantalla.
 - Demo entre pestañas del mismo navegador, sin credenciales.
 - Migración SQL, reglas RLS y pruebas automáticas.
 
@@ -23,7 +24,9 @@ npm ci
 npm run dev
 ```
 
-Abre `http://localhost:3000` y selecciona **Explorar la demo**. Desde el panel abre el proyector y los cuatro controles. Cada control elige equipo y toca **Estoy listo**.
+Abre `http://localhost:3000` y selecciona **Jugar contra la CPU** (ruta `/solo`). Elige equipo, juego y dificultad: puedes jugar inmediatamente, sin variables de entorno ni Supabase. Los resultados se acumulan solo en esa página y se reinician al recargar. [Guía de uso](docs/USAGE.md).
+
+Para revisar el flujo del evento, selecciona **Explorar la demo**. Desde el panel abre el proyector y los cuatro controles. Cada control elige equipo y toca **Estoy listo**.
 
 La demo usa BroadcastChannel y almacenamiento local. **Funciona entre pestañas del mismo navegador/origen; no conecta teléfonos distintos ni es un modo offline de producción.** Sus datos nunca se guardan en Supabase.
 
@@ -44,13 +47,14 @@ Importar el repositorio en Vercel, preset Next.js, Node 22.x, instalación `npm 
 
 ## Rutas
 
-| Ruta              | Uso                                  |
-| ----------------- | ------------------------------------ |
-| `/`               | Entrada por código o demo            |
-| `/operator`       | Acceso del operador                  |
-| `/control/[code]` | Administración y selección de juegos |
-| `/host/[code]`    | Proyector y autoridad de la partida  |
-| `/play/[code]`    | Equipo y control móvil               |
+| Ruta              | Uso                                              |
+| ----------------- | ------------------------------------------------ |
+| `/`               | Entrada por código o demo                        |
+| `/solo`           | Un jugador y tres CPU, cancha y controles juntos |
+| `/operator`       | Acceso del operador                              |
+| `/control/[code]` | Administración y selección de juegos             |
+| `/host/[code]`    | Proyector y autoridad de la partida              |
+| `/play/[code]`    | Equipo y control móvil                           |
 
 ## Verificación
 
@@ -63,13 +67,14 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Las pruebas SQL usan PGlite (Postgres embebido) con Auth/Realtime simulados. E2E abre el panel, el proyector y cuatro controles de demo con Playwright; ejecutar sin variables de Supabase para cubrir también el estado sin configuración. El entorno CI funciona así. `npm run format` aplica Prettier.
+Las pruebas SQL usan PGlite (Postgres embebido) con Auth/Realtime simulados. Los tests de CPU completan los cuatro juegos con cualquier equipo humano y verifican elecciones ciegas, memoria de cartas vistas y pausa. E2E recorre el modo individual en escritorio/móvil y abre el panel, el proyector y cuatro controles de demo con Playwright; ejecutar sin variables de Supabase para cubrir también el estado sin configuración. El entorno CI funciona así. `npm run format` aplica Prettier.
 
 ## Arquitectura y operación
 
 El computador del organizador valida las reglas. Supabase transporta eventos y conserva resultados; no hay salas en memoria de Vercel Functions. El celular envía acciones, no puntajes. Los sprites y escenarios se dibujan en Canvas, separado del paquete móvil.
 
 - [Reglas](docs/RULES.md)
+- [Cómo usar la app](docs/USAGE.md)
 - [Arquitectura y recuperación](docs/ARCHITECTURE.md)
 - [Guía del operador](docs/OPERATIONS.md)
 

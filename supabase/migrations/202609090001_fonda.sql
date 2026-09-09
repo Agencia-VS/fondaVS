@@ -1,4 +1,8 @@
--- FondaVS. Run once in an isolated Supabase project / preview branch.
+-- FondaVS: ejecutar completo UNA VEZ en SQL Editor de un proyecto Supabase nuevo.
+-- Crea las tablas, funciones y permisos necesarios. No contiene credenciales.
+-- Si ya aplicaste esta migración, no la repitas: el modo CPU no requiere más SQL.
+-- La transacción evita dejar una instalación parcial si ocurre un error.
+begin;
 create table public.fonda_rooms (
   id uuid primary key default gen_random_uuid(), code text not null unique check(code ~ '^[A-Z2-9]{6}$'),
   owner_id uuid not null references auth.users(id), created_at timestamptz not null default now(),
@@ -122,3 +126,4 @@ grant execute on function public.fonda_can_realtime(text,boolean) to authenticat
 create policy fonda_broadcast_read on realtime.messages for select to authenticated using(extension='broadcast' and public.fonda_can_realtime(realtime.topic(),false));
 create policy fonda_broadcast_send on realtime.messages for insert to authenticated with check(extension='broadcast' and public.fonda_can_realtime(realtime.topic(),true));
 -- Also disable "Allow public access" in Realtime settings. No broad realtime policies should coexist.
+commit;

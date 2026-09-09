@@ -1,52 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Action,
-  GAME_INFO,
-  MEMORY_ICONS,
-  TEAM_INFO,
-  TEAMS,
-  Team,
-  ZONES,
-  ZONE_NAMES,
-} from '@/game/types';
+import { Action, GAME_INFO, TEAM_INFO, TEAMS, Team } from '@/game/types';
+import { controlState } from '@/game/controls';
+import { GamePad } from './GamePad';
 import { getRoom, isDemo, joinRoom } from '@/lib/rooms';
 import { Player } from '@/lib/realtime/player';
 import { LiveState, Room } from '@/lib/room-types';
 import { Brand, ErrorMessage, Loading } from './Brand';
-function PadButton({
-  label,
-  children,
-  disabled,
-  onAction,
-  className = '',
-}: {
-  label: string;
-  children: React.ReactNode;
-  disabled: boolean;
-  onAction: () => void;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      className={`pad-button ${className}`}
-      disabled={disabled}
-      aria-label={label}
-      onPointerDown={(e) => {
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        e.preventDefault();
-        onAction();
-      }}
-      onClick={(e) => {
-        if (e.detail === 0) onAction();
-      }}
-    >
-      {children}
-    </button>
-  );
-}
 export default function PlayerScreen({
   code,
   initialTeam,
@@ -194,54 +155,10 @@ export default function PlayerScreen({
   const member = room.member;
   const info = TEAM_INFO[member.team];
   const round = state?.round;
-  const d = round?.data;
-  const baseDisabled = !online || !round || round.phase !== 'playing' || round.pausedAt !== null;
-  let canPlay = !baseDisabled;
-  let role = '';
-  if (d?.kind === 'penalties') {
-    const kicker = d.teams[d.kicker];
-    const keeper = d.teams[1 - d.kicker];
-    role =
-      member.team === kicker
-        ? 'Te toca chutar'
-        : member.team === keeper
-          ? 'Te toca atajar'
-          : 'Tu equipo espera el próximo partido';
-    canPlay &&=
-      d.phase === 'select' && d.teams.includes(member.team) && !d.selected.includes(member.team);
-  } else if (d?.kind === 'rayuela') {
-    role =
-      TEAMS[d.turn % 4] === member.team
-        ? 'Apunta a la cuerda'
-        : `Lanza ${TEAM_INFO[TEAMS[d.turn % 4]].name}`;
-    canPlay &&= TEAMS[d.turn % 4] === member.team && d.phase === 'aim';
-  } else if (d?.kind === 'memory') {
-    role =
-      TEAMS[d.teamIndex] === member.team
-        ? 'Encuentra la pareja'
-        : `Juega ${TEAM_INFO[TEAMS[d.teamIndex]].name}`;
-    canPlay &&= TEAMS[d.teamIndex] === member.team && d.phase === 'pick';
-  } else if (d?.kind === 'sack-race') {
-    const stumbled = now < d.cooldowns[member.team];
-    role = stumbled
-      ? '¡Tropiezo! Respira un segundo.'
-      : d.finishedAt[member.team]
-        ? '¡Llegaste a la meta!'
-        : `Sigue con ${d.expected[member.team] === 'left' ? 'IZQ' : 'DER'}`;
-    canPlay &&= !stumbled && !d.finishedAt[member.team];
-  }
+  const { canPlay, role, seconds } = controlState(round, member.team, now, online);
   function action(a: Action) {
     player.current?.action(a);
   }
-  const deadline =
-    round?.phase === 'countdown'
-      ? round.startsAt
-      : d && 'phaseEndsAt' in d
-        ? d.phaseEndsAt
-        : round?.endsAt;
-  const seconds = deadline
-    ? Math.max(0, Math.ceil((deadline - (round?.pausedAt ?? now)) / 1000))
-    : 0;
   return (
     <main className="controller" style={{ '--team': info.color } as React.CSSProperties}>
       <header className="controller-header">
@@ -310,119 +227,7 @@ export default function PlayerScreen({
               <strong>{seconds}</strong>
             </div>
           ) : null}
-          <div className="controller-pad">
-            {d?.kind === 'sack-race' && (
-              <>
-                <div className="race-progress">
-                  <span>
-                    {d.steps[member.team]}
-                    <small>/30 pasos</small>
-                  </span>
-                </div>
-                <div className="race-buttons">
-                  <PadButton
-                    disabled={!canPlay}
-                    label="Izquierda"
-                    onAction={() => action({ type: 'tap', side: 'left' })}
-                  >
-                    <span>←</span>IZQ
-                  </PadButton>
-                  <PadButton
-                    disabled={!canPlay}
-                    label="Derecha"
-                    onAction={() => action({ type: 'tap', side: 'right' })}
-                  >
-                    <span>→</span>DER
-                  </PadButton>
-                </div>
-              </>
-            )}
-            {d?.kind === 'penalties' && (
-              <>
-                <div className="goal-pad">
-                  {ZONES.map((z, i) => (
-                    <PadButton
-                      key={z}
-                      className={`zone-${z}`}
-                      label={ZONE_NAMES[z]}
-                      disabled={!canPlay}
-                      onAction={() => action({ type: 'shoot', zone: z })}
-                    >
-                      <span>{['↖', '↗', '●', '↙', '↘'][i]}</span>
-                      <small>{i + 1}</small>
-                    </PadButton>
-                  ))}
-                </div>
-                {d.selected.includes(member.team) && (
-                  <p className="choice-confirmed">Elección confirmada. Mira el proyector ✓</p>
-                )}
-              </>
-            )}
-            {d?.kind === 'rayuela' && (
-              <PadButton
-                className="throw-button"
-                label="Lanzar"
-                disabled={!canPlay}
-                onAction={() => action({ type: 'throw' })}
-              >
-                <span>◎</span>LANZAR<small>MIRA LA CUERDA EN EL PROYECTOR</small>
-              </PadButton>
-            )}
-            {d?.kind === 'memory' && (
-              <>
-                <div className="memory-selection">
-                  CARTA {String(d.cursor + 1).padStart(2, '0')}{' '}
-                  <span>
-                    {d.cards[d.cursor] !== null
-                      ? MEMORY_ICONS[d.cards[d.cursor]!]
-                      : `${Math.floor(d.cursor / 4) + 1}ª FILA · ${(d.cursor % 4) + 1}ª COLUMNA`}
-                  </span>
-                </div>
-                <div className="dpad">
-                  <PadButton
-                    className="dpad-up"
-                    label="Arriba"
-                    disabled={!canPlay}
-                    onAction={() => action({ type: 'move', direction: 'up' })}
-                  >
-                    ↑
-                  </PadButton>
-                  <PadButton
-                    className="dpad-left"
-                    label="Izquierda"
-                    disabled={!canPlay}
-                    onAction={() => action({ type: 'move', direction: 'left' })}
-                  >
-                    ←
-                  </PadButton>
-                  <PadButton
-                    className="dpad-right"
-                    label="Derecha"
-                    disabled={!canPlay}
-                    onAction={() => action({ type: 'move', direction: 'right' })}
-                  >
-                    →
-                  </PadButton>
-                  <PadButton
-                    className="dpad-down"
-                    label="Abajo"
-                    disabled={!canPlay}
-                    onAction={() => action({ type: 'move', direction: 'down' })}
-                  >
-                    ↓
-                  </PadButton>
-                </div>
-                <PadButton
-                  className="flip-button"
-                  label="Voltear"
-                  disabled={!canPlay}
-                  onAction={() => action({ type: 'flip' })}
-                >
-                  VOLTEAR ↻
-                </PadButton>
-              </>
-            )}
-          </div>
+          <GamePad round={round} team={member.team} canPlay={canPlay} onAction={action} />
           <div className="controller-game-footer">
             <strong>
               {String(seconds).padStart(2, '0')}
