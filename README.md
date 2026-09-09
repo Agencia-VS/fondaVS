@@ -1,5 +1,78 @@
 # FondaVS
 
-Juegos de fonda para Creative, Lab, Sports y Media. Proyector compartido y celulares como controles.
+Cuatro equipos, un proyector y celulares como controles. MVP de fonda para **Creative, Lab, Sports y Media**, construido con Next.js, React, TypeScript, Canvas 2D y Supabase.
 
-La implementación inicial se prepara en una rama de trabajo para revisión.
+## Incluido
+
+- Lobby con código/QR, plazas exclusivas y panel de operador.
+- Carrera de sacos, rayuela, penales con playoff y memorice.
+- Ensayos sin puntos, ranking, pausa y cancelación de rondas.
+- Acciones con confirmación, deduplicación y canales privados.
+- Resultados confirmados persistentes y concesión de host única.
+- Demo entre pestañas del mismo navegador, sin credenciales.
+- Migración SQL, reglas RLS y pruebas automáticas.
+
+**Estado:** implementación inicial revisable. Falta configurar y ensayar el proyecto Supabase real y probar los dispositivos/red del evento. Los tests locales no sustituyen esa validación.
+
+## Ejecutar
+
+Node.js 22 o superior; se recomienda 22 LTS para coincidir con CI.
+
+```bash
+npm ci
+npm run dev
+```
+
+Abre `http://localhost:3000` y selecciona **Explorar la demo**. Desde el panel abre el proyector y los cuatro controles. Cada control elige equipo y toca **Estoy listo**.
+
+La demo usa BroadcastChannel y almacenamiento local. **Funciona entre pestañas del mismo navegador/origen; no conecta teléfonos distintos ni es un modo offline de producción.** Sus datos nunca se guardan en Supabase.
+
+## Configurar online
+
+Sigue [docs/SETUP.md](docs/SETUP.md): ejecutar la migración, activar sesiones anónimas, configurar canales privados y crear un operador confirmado.
+
+| Variable                               | Uso                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | URL del proyecto                                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave pública; admite también la clave `anon` heredada              |
+| `SUPABASE_SECRET_KEY`                  | Solo servidor; clave secreta o `service_role` heredada              |
+| `OPERATOR_EMAILS`                      | Solo servidor; correos confirmados autorizados, separados por comas |
+
+Copiar `.env.example` a `.env.local` y configurar las mismas variables en Vercel. Nunca subir `.env.local` ni exponer claves secretas con `NEXT_PUBLIC_`.
+
+Importar el repositorio en Vercel, preset Next.js, Node 22.x, instalación `npm ci` y build `npm run build`. Abrir `/operator` para crear una sala online.
+
+## Rutas
+
+| Ruta              | Uso                                  |
+| ----------------- | ------------------------------------ |
+| `/`               | Entrada por código o demo            |
+| `/operator`       | Acceso del operador                  |
+| `/control/[code]` | Administración y selección de juegos |
+| `/host/[code]`    | Proyector y autoridad de la partida  |
+| `/play/[code]`    | Equipo y control móvil               |
+
+## Verificación
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Las pruebas SQL usan PGlite (Postgres embebido) con Auth/Realtime simulados. E2E abre el panel, el proyector y cuatro controles de demo con Playwright; ejecutar sin variables de Supabase para cubrir también el estado sin configuración. El entorno CI funciona así. `npm run format` aplica Prettier.
+
+## Arquitectura y operación
+
+El computador del organizador valida las reglas. Supabase transporta eventos y conserva resultados; no hay salas en memoria de Vercel Functions. El celular envía acciones, no puntajes. Los sprites y escenarios se dibujan en Canvas, separado del paquete móvil.
+
+- [Reglas](docs/RULES.md)
+- [Arquitectura y recuperación](docs/ARCHITECTURE.md)
+- [Guía del operador](docs/OPERATIONS.md)
+
+La ventana de host debe permanecer visible y el computador despierto. Si se cierra, se conservan los resultados confirmados y se repite la ronda incompleta. Un corte del transporte requiere cancelar esa ronda; un control desconectado pausa hasta reconectar.
+
+Rayuela puntúa al llegar el comando al host y sigue siendo sensible a la red. El operador es confiable en este modelo; no es un sistema con arbitraje independiente para premios monetarios. No hay migración automática de host ni respaldo offline de la sala online.
