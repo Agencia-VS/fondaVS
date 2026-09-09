@@ -116,7 +116,7 @@ export default function ProjectorScreen({
               onReconnect();
             }}
           >
-            {spectator ? 'Reconectar pantalla' : 'Reconectar proyector'}
+            {spectator ? 'Reconectar pantalla' : 'Reconectar sala'}
           </button>
         </div>
       )}
@@ -125,10 +125,10 @@ export default function ProjectorScreen({
           <Stage round={round} clockOffset={clockOffset} />
           {spectator && !online && (
             <div className="stage-overlay" role="status">
-              <h2>Esperando al proyector.</h2>
+              <h2>Esperando a la sala.</h2>
               <p>
-                El operador debe mantener abierta la pantalla principal. Esta vista se sincroniza al
-                recuperar la conexión.
+                El operador debe abrir la sala desde su panel y mantener esa ventana visible. Esta
+                vista se sincroniza al recuperar la conexión.
               </p>
             </div>
           )}

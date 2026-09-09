@@ -22,8 +22,7 @@ test('shared projector with one phone + three CPUs, then two phones + two CPUs',
   });
   await watcher.goto(`/watch/${code}`);
   await expect(watcher.getByText('VISTA COMPARTIDA · SOLO LECTURA')).toBeVisible();
-  await expect(watcher.getByRole('heading', { name: 'Esperando al proyector.' })).toBeVisible();
-  await expect(page.getByText('Proyector sin conectar', { exact: true })).toBeVisible();
+  await expect(page.getByText('Sala conectada', { exact: true })).toBeVisible();
   await watcher.evaluate((roomCode) => {
     const room = JSON.parse(localStorage.getItem(`fonda:${roomCode}`)!);
     const channel = new BroadcastChannel(`fonda:${room.id}:state`);
@@ -34,8 +33,7 @@ test('shared projector with one phone + three CPUs, then two phones + two CPUs',
   const snapshot = () => watcher.evaluate(() => (window as ObservedWindow).latestState);
   const host = await context.newPage();
   await host.goto(`/host/${code}`);
-  await expect(page.getByText('Proyector conectado', { exact: true })).toBeVisible();
-  await expect(watcher.getByRole('heading', { name: 'Esperando al proyector.' })).toBeHidden();
+  await expect(watcher.getByRole('heading', { name: 'Esperando a la sala.' })).toBeHidden();
   await page.getByRole('checkbox', { name: 'Completar equipos libres con CPU' }).check();
   await page.getByLabel('Dificultad de la CPU').selectOption('hard');
   await expect(page.getByRole('button', { name: 'Iniciar juego' })).toBeDisabled();

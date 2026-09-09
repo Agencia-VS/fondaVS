@@ -28,7 +28,7 @@ export default function Home() {
           18 DE SEPTIEMBRE <span>•</span> CUATRO EQUIPOS
         </span>
         <a href="/operator" className="text-link">
-          Soy operador ↗
+          Crear sala en el computador ↗
         </a>
       </header>
       <section className="home-main">
@@ -71,9 +71,13 @@ export default function Home() {
                 A jugar <span>→</span>
               </button>
             </div>
-            <small>Escanea el QR del proyector o escribe el código.</small>
+            <small>En tu celular: escanea el QR o escribe el código de la sala.</small>
             <ErrorMessage message={error} />
           </form>
+          <Link href="/operator" className="button primary solo-home-link">
+            Jugar con celulares + CPU <span>→</span>
+          </Link>
+          <span className="demo-note">Abre una sala en tu computador y conecta los celulares.</span>
           <Link href="/solo" className="button secondary solo-home-link">
             Jugar contra la CPU <span>→</span>
           </Link>

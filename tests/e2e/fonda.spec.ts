@@ -11,9 +11,11 @@ test('one projector, four exclusive controllers, and all four minigames', async 
   await page.getByRole('button', { name: 'Explorar la demo' }).click();
   await expect(page).toHaveURL(/control\/DEMO\d{2}/);
   const code = page.url().split('/').at(-1)!;
+  await expect(page.getByText('Sala conectada', { exact: true })).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Completar equipos libres con CPU' }).uncheck();
   const host = await context.newPage();
   await host.goto(`/host/${code}`);
-  await expect(page.getByText('Proyector conectado', { exact: true })).toBeVisible();
+  await expect(host.getByText('VISTA COMPARTIDA · SOLO LECTURA')).toBeVisible();
   const players: Page[] = [];
   const teams = ['Creative', 'Lab', 'Sports', 'Media'];
   for (const team of teams) {

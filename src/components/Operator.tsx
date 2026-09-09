@@ -61,11 +61,10 @@ export default function Operator() {
           <br />
           <em>operador.</em>
         </h1>
-        <p>Prepara la sala, conecta los equipos y lleva el ritmo de la fonda.</p>
+        <p>Abre esta página en tu computador. Los jugadores usarán sus celulares como controles.</p>
         <p className="hint">
-          Aquí creas la sala, eliges juegos y administras las pausas. Para practicar, puedes
-          completar los equipos libres con CPU. También puedes compartir una vista del proyector con
-          quienes estén en otra casa.
+          Crea una sala, conecta los celulares con el QR e inicia un juego. La cancha se mostrará en
+          esta misma ventana. Los equipos libres se completan con CPU para practicar.
         </p>
         {!configured() ? (
           <div className="info-message">

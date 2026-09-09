@@ -26,6 +26,8 @@ export default function PlayerScreen({
   const [online, setOnline] = useState(false);
   const [ping, setPing] = useState(0);
   const [ready, setReady] = useState(false);
+  const readyIntent = useRef(false);
+  const [attempt, setAttempt] = useState(0);
   const [now, setNow] = useState(0);
   const player = useRef<Player | null>(null);
   useEffect(() => {
@@ -44,6 +46,9 @@ export default function PlayerScreen({
   useEffect(() => {
     if (!room?.member) return;
     let active = true;
+    setOnline(false);
+    setState(null);
+    setError('');
     const p = new Player(
       room,
       (s) => {
@@ -53,6 +58,7 @@ export default function PlayerScreen({
         if (active) {
           setOnline(o);
           setPing(ms);
+          if (o) setError('');
         }
       },
       (s) => {
@@ -60,6 +66,7 @@ export default function PlayerScreen({
       },
     );
     player.current = p;
+    p.setReady(readyIntent.current);
     void p.start().catch((e) => {
       if (active) setError(e.message);
     });
@@ -67,9 +74,27 @@ export default function PlayerScreen({
     return () => {
       active = false;
       p.close();
+      player.current = null;
       clearInterval(timer);
     };
-  }, [room]);
+  }, [room?.id, room?.member?.id, attempt]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function reconnect() {
+    setBusy(true);
+    setError('');
+    try {
+      const current = await getRoom(code);
+      if (!current.member) {
+        readyIntent.current = false;
+        setReady(false);
+      }
+      setRoom(current);
+      setAttempt((value) => value + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo reconectar el control.');
+    } finally {
+      setBusy(false);
+    }
+  }
   async function join(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -158,6 +183,8 @@ export default function PlayerScreen({
   const member = room.member;
   const info = TEAM_INFO[member.team];
   const round = state?.round;
+  const readyConfirmed =
+    ready && online && state?.members.some((m) => m.id === member.id && m.ready);
   const { canPlay, role, seconds } = controlState(round, member.team, now, online);
   function action(a: Action) {
     player.current?.action(a);
@@ -174,7 +201,7 @@ export default function PlayerScreen({
         </span>
         <span className={`connection ${online ? 'connected' : ''}`}>
           <i />
-          {online ? 'En línea' : 'Conectando'}
+          {online ? 'En línea' : error ? 'Sin conexión' : 'Conectando'}
         </span>
       </header>
       {error && (
@@ -186,9 +213,17 @@ export default function PlayerScreen({
         </div>
       )}
       {!online && (
-        <p className="connection-notice" role="status">
-          Esperando al proyector. Los botones se activarán al reconectar.
-        </p>
+        <div className="connection-notice" role="status">
+          <strong>Esperando conexión con la sala.</strong>
+          <p>
+            {round && round.phase !== 'finished'
+              ? 'Mantén tu control abierto. El operador debe recuperar la sala en su computador para continuar.'
+              : 'El operador debe abrir la sala en su computador. Puedes marcar «Estoy listo» mientras conecta.'}
+          </p>
+          <button className="button secondary" disabled={busy} onClick={() => void reconnect()}>
+            {busy ? 'Reconectando…' : 'Reconectar control'}
+          </button>
+        </div>
       )}
       {!round || round.phase === 'finished' ? (
         <section className="controller-wait">
@@ -205,19 +240,34 @@ export default function PlayerScreen({
                 : state?.saving
                   ? 'Confirmando el resultado…'
                   : 'Mira el resultado en el proyector.'
-              : 'Mira el proyector y espera la señal del operador.'}
+              : readyConfirmed
+                ? 'Todo listo. Mira la cancha; el operador iniciará el juego.'
+                : ready
+                  ? 'Tu equipo está reservado. Estamos enviando tu preparación.'
+                  : 'Marca «Estoy listo». El operador iniciará el juego desde su computador.'}
           </p>
           <button
-            className={`button ${ready ? 'ready-button' : 'primary'}`}
-            disabled={!online}
+            className={`button ${readyConfirmed ? 'ready-button' : 'primary'}`}
+            disabled={busy}
             onClick={() => {
+              readyIntent.current = !ready;
               player.current?.setReady(!ready);
               setReady(!ready);
             }}
           >
-            {ready ? 'Listo para jugar ✓' : 'Estoy listo →'}
+            {readyConfirmed
+              ? 'Listo confirmado ✓'
+              : ready
+                ? 'Listo · esperando confirmación'
+                : 'Estoy listo →'}
           </button>
-          <small>{ready ? 'Tu equipo está preparado.' : 'Avísanos cuando estés preparado.'}</small>
+          <small>
+            {readyConfirmed
+              ? 'La sala recibió tu preparación. Espera el inicio.'
+              : ready
+                ? 'Lo enviaremos al conectar. No necesitas pulsar otra vez.'
+                : 'Puedes prepararte aunque la sala todavía esté conectando.'}
+          </small>
         </section>
       ) : (
         <>

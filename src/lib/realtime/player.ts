@@ -26,12 +26,16 @@ export class Player {
     private onConnection: (online: boolean, ping: number) => void,
     private onError: (s: string) => void,
   ) {
-    this.bus = new Bus(room.id, isDemo(room.code), () => this.onConnection(false, 0));
+    this.bus = new Bus(room.id, isDemo(room.code), (message) => {
+      this.onConnection(false, 0);
+      if (message) this.onError(message);
+    });
   }
   async start() {
     const m = this.room.member;
     if (!m) throw new Error('Elige tu equipo.');
-    await this.bus.listen('state', (p) => {
+    const stateSubscription = this.bus.listen('state', (p) => {
+      if (this.closed) return;
       const s = p as LiveState;
       if (
         typeof s.version !== 'number' ||
@@ -60,7 +64,8 @@ export class Player {
       this.memberAcknowledged = true;
       this.onState(s);
     });
-    await this.bus.listen(`out:${m.id}`, (p) => {
+    const outputSubscription = this.bus.listen(`out:${m.id}`, (p) => {
+      if (this.closed) return;
       const data = p as { kind: string; at?: number; lastSeq?: number; seq?: number };
       if (data.kind === 'pong' && typeof data.at === 'number') {
         this.lastPong = Date.now();
@@ -68,7 +73,10 @@ export class Player {
           this.sequence = data.lastSeq ?? 0;
           this.initialized = true;
         }
-        this.onConnection(Date.now() - this.lastState < 4000, Math.max(0, Date.now() - data.at));
+        this.onConnection(
+          this.memberAcknowledged && Date.now() - this.lastState < 4000,
+          Math.max(0, Date.now() - data.at),
+        );
       }
       if (data.kind === 'ack' && this.queue[0]?.seq === data.seq) {
         this.queue.shift();
@@ -76,19 +84,29 @@ export class Player {
       }
     });
     if (this.closed) return;
-    const ping = () => {
-      void this.bus
-        .send(`in:${m.id}`, { kind: 'ping', at: Date.now(), ready: this.ready, memberId: m.id })
-        .catch(() => this.onConnection(false, 0));
-      if (Date.now() - this.lastPong > 4000 || Date.now() - this.lastState > 4000)
-        this.onConnection(false, 0);
-    };
-    this.timer = setInterval(ping, 1000);
+    // Keep heartbeats and both listeners alive if one subscription initially
+    // fails, so the SDK can recover without leaving the controller half-started.
+    this.timer = setInterval(() => this.ping(), 1000);
     this.resend = setInterval(() => void this.transmit(), 350);
-    ping();
+    this.ping();
+    await Promise.all([stateSubscription, outputSubscription]);
+  }
+  private ping() {
+    if (this.closed || !this.room.member) return;
+    const id = this.room.member.id;
+    void this.bus
+      .send(`in:${id}`, { kind: 'ping', at: Date.now(), ready: this.ready, memberId: id })
+      .catch((e) => {
+        if (this.closed) return;
+        this.onConnection(false, 0);
+        this.onError(e instanceof Error ? e.message : 'No se pudo conectar el control.');
+      });
+    if (Date.now() - this.lastPong > 4000 || Date.now() - this.lastState > 4000)
+      this.onConnection(false, 0);
   }
   setReady(value: boolean) {
     this.ready = value;
+    if (this.timer) this.ping();
   }
   action(action: Action) {
     if (
