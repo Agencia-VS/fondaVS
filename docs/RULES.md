@@ -25,7 +25,7 @@ Se alternan los roles. Se cierra antes si una ventaja es irreversible. Empate tr
 
 ## Memorice
 
-La baraja se mezcla al iniciar y permanece oculta en el host. El cursor empieza en la primera carta disponible. No se puede repetir carta ni seleccionar una pareja encontrada. Los bordes no envuelven.
+La partida usa una matriz 6×6 de 36 cartas (18 parejas), con un máximo de 7 minutos. La baraja se mezcla al iniciar y permanece oculta en el host. El cursor empieza en la primera carta disponible. No se puede repetir carta ni seleccionar una pareja encontrada. Los bordes no envuelven.
 
 Dos cartas se revelan durante 1.5 segundos; una pareja suma y concede otro turno al equipo. Un fallo pasa al siguiente. Si vence el tiempo con una carta abierta, se oculta y cambia de equipo. No se aceptan entradas durante la revelación.
 

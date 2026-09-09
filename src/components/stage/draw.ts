@@ -1,4 +1,4 @@
-import { PublicRound, TEAM_INFO, TEAMS } from '@/game/types';
+import { MEMORY_SIDE, PublicRound, TEAM_INFO, TEAMS } from '@/game/types';
 import { rayuelaX } from '@/game/engine';
 type C = CanvasRenderingContext2D;
 const INK = '#142f38',
@@ -303,14 +303,14 @@ export function drawStage(c: C, r: PublicRound | null, now: number, positions: n
       'center',
     );
   } else {
-    const cardW = 100,
-      cardH = 94,
-      gap = 14,
-      startX = 259,
-      startY = 73;
+    const cardW = 67,
+      cardH = 57,
+      gap = 8,
+      startX = 257,
+      startY = 68;
     d.cards.forEach((v, i) => {
-      const x = startX + (i % 4) * (cardW + gap),
-        y = startY + Math.floor(i / 4) * (cardH + gap);
+      const x = startX + (i % MEMORY_SIDE) * (cardW + gap),
+        y = startY + Math.floor(i / MEMORY_SIDE) * (cardH + gap);
       const matched = d.matched.includes(i);
       const selected = d.cursor === i;
       if (selected) {
@@ -320,8 +320,8 @@ export function drawStage(c: C, r: PublicRound | null, now: number, positions: n
       rect(c, x, y, cardW, cardH, v === null ? '#315a5d' : matched ? '#c6d2a0' : PAPER);
       if (v === null) {
         rect(c, x + 9, y + 9, cardW - 18, cardH - 18, '#3e6666');
-        text(c, 'VS', x + 50, y + 57, 29, '#73918a', 'center');
-      } else icon(c, v, x + 26, y + 20, 3);
+        text(c, 'VS', x + cardW / 2, y + cardH / 2 + 7, 18, '#73918a', 'center');
+      } else icon(c, v, x + 8, y + 5, 2);
       text(c, String(i + 1).padStart(2, '0'), x + 9, y + 19, 11, v === null ? '#a2b9a9' : INK);
     });
     text(c, 'PAREJAS', 122, 135, 18);

@@ -111,6 +111,9 @@ export default function PlayerScreen({
           <br />
           El resto pone los aplausos.
         </p>
+        <Link href="/" className="text-link">
+          Volver al inicio ↗
+        </Link>
         <form onSubmit={join}>
           <div className="team-options">
             {TEAMS.map((t) => {
@@ -174,7 +177,14 @@ export default function PlayerScreen({
           {online ? 'En línea' : 'Conectando'}
         </span>
       </header>
-      <ErrorMessage message={error} />
+      {error && (
+        <div className="controller-error">
+          <ErrorMessage message={error} />
+          <Link href="/" className="controller-error-link">
+            Volver al inicio
+          </Link>
+        </div>
+      )}
       {!online && (
         <p className="connection-notice" role="status">
           Esperando al proyector. Los botones se activarán al reconectar.

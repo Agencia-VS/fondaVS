@@ -1,5 +1,5 @@
 import { random, turnKey } from './engine';
-import { Action, PublicMemory, PublicRound, Team, TEAMS, ZONES } from './types';
+import { Action, MEMORY_SIDE, PublicMemory, PublicRound, Team, TEAMS, ZONES } from './types';
 
 export const DIFFICULTIES = ['easy', 'normal', 'hard'] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
@@ -9,9 +9,9 @@ export const DIFFICULTY_INFO: Record<Difficulty, { name: string; description: st
   hard: { name: 'Brava', description: 'Más ritmo, mejor puntería y más memoria.' },
 };
 const SKILL = {
-  easy: { tap: 330, mistake: 0.045, aimError: 340, memory: 4, move: 430 },
-  normal: { tap: 235, mistake: 0.025, aimError: 210, memory: 8, move: 310 },
-  hard: { tap: 165, mistake: 0.01, aimError: 100, memory: 12, move: 220 },
+  easy: { tap: 330, mistake: 0.045, aimError: 340, memory: 8, move: 360 },
+  normal: { tap: 235, mistake: 0.025, aimError: 210, memory: 12, move: 230 },
+  hard: { tap: 165, mistake: 0.01, aimError: 100, memory: 18, move: 150 },
 };
 
 /** A CPU can only receive the same redacted view as a human controller. */
@@ -139,14 +139,14 @@ export class CpuPlayer {
       this.target = null;
       return { type: 'flip' };
     }
-    const row = Math.floor(d.cursor / 4);
-    const targetRow = Math.floor(this.target / 4);
+    const row = Math.floor(d.cursor / MEMORY_SIDE);
+    const targetRow = Math.floor(this.target / MEMORY_SIDE);
     const direction =
       row < targetRow
         ? 'down'
         : row > targetRow
           ? 'up'
-          : d.cursor % 4 < this.target % 4
+          : d.cursor % MEMORY_SIDE < this.target % MEMORY_SIDE
             ? 'right'
             : 'left';
     return { type: 'move', direction };

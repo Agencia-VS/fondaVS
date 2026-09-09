@@ -21,16 +21,22 @@ Usar primero un proyecto o rama de ensayo. La migración crea tablas `fonda_*` y
 5. Verificar que no existan otras políticas que permitan leer/escribir cualquier canal. La aplicación utiliza heartbeats propios y no necesita Presence.
 6. Configurar las cuatro variables de `.env.example`, conservando la clave secreta únicamente en servidor.
 
+### Si el control muestra “sesión anónima”
+
+Ese mensaje lo entrega la aplicación cuando `signInAnonymously()` es rechazado. En el mismo proyecto cuya URL está en `NEXT_PUBLIC_SUPABASE_URL`, abrir **Authentication → Sign In / Providers → Anonymous Sign-Ins** y activarlo. Comprobar también que CAPTCHA no esté bloqueando el flujo anónimo y que la clave pública pertenezca a esa URL. Como las variables `NEXT_PUBLIC_` se incorporan durante el build, guardar los cambios en Vercel y crear un nuevo deployment. La pantalla ahora muestra el código exacto devuelto por Supabase para distinguir estos casos.
+
+La documentación oficial confirma que `signInAnonymously()` crea un usuario autenticado temporal y que Anonymous Sign-Ins debe estar habilitado en el proyecto: [Supabase Anonymous Sign-Ins](https://supabase.com/docs/guides/auth/auth-anonymous).
+
 No se necesita publicar tablas en Postgres Changes: el movimiento usa Broadcast. Las API verifican el JWT con `auth.getUser` antes de acceder a datos con la credencial de servidor.
 
 ### Variables exactas
 
-| Variable                               | Valor                                                                                                  |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`             | URL del proyecto, como `https://<project-ref>.supabase.co`                                             |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave `sb_publishable_…` de ese proyecto; también acepta la clave `anon` heredada                      |
-| `SUPABASE_SECRET_KEY`                  | Clave `sb_secret_…` del mismo proyecto; también acepta la clave `service_role` heredada. Solo servidor |
-| `OPERATOR_EMAILS`                      | Correo del operador creado en Authentication → Users. Varios correos separados por comas               |
+| Variable                               | Valor                                                                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | URL del proyecto, como `https://<project-ref>.supabase.co`                                                          |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave `sb_publishable_…`; también acepta `NEXT_PUBLIC_SUPABASE_ANON_KEY` con la clave `anon` heredada               |
+| `SUPABASE_SECRET_KEY`                  | Clave `sb_secret_…`; también acepta `SUPABASE_SERVICE_ROLE_KEY` con la clave `service_role` heredada. Solo servidor |
+| `OPERATOR_EMAILS`                      | Correo del operador creado en Authentication → Users. Varios correos separados por comas                            |
 
 `OPERATOR_EMAILS` autoriza cuentas existentes; no crea usuarios ni contraseñas. La contraseña se define al crear el usuario en Supabase Auth y se utiliza para ingresar en `/operator`.
 

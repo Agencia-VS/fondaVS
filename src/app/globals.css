@@ -985,6 +985,27 @@ input {
   border-top: 6px solid var(--team);
   overscroll-behavior: none;
 }
+.controller-error {
+  border: 1px solid #d06452;
+  background: #3a2830;
+  color: #ffe4cf;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.controller-error .error-message {
+  color: inherit;
+  margin: 0;
+  line-height: 1.5;
+}
+.controller-error-link {
+  display: inline-block;
+  color: var(--team);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 9px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .controller-header {
   display: flex;
   align-items: center;

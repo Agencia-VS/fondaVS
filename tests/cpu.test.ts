@@ -10,7 +10,7 @@ import {
   resumeRound,
 } from '@/game/engine';
 import { SoloSession } from '@/game/solo';
-import { GAMES, TEAMS, ZONES } from '@/game/types';
+import { GAMES, MEMORY_CARD_COUNT, TEAMS, ZONES } from '@/game/types';
 
 describe('solo sessions', () => {
   for (const game of GAMES) {
@@ -36,7 +36,7 @@ describe('solo sessions', () => {
           expect(view.data.steps[team]).toBe(0);
           for (const cpu of TEAMS.filter((t) => t !== team)) expect(view.data.steps[cpu]).toBe(30);
         } else if (view.data.kind === 'memory') {
-          expect(view.data.matched).toHaveLength(16);
+          expect(view.data.matched).toHaveLength(MEMORY_CARD_COUNT);
           expect(view.data.scores[team]).toBe(0);
         } else if (view.data.kind === 'rayuela') {
           expect(view.data.throws).toHaveLength(12);
