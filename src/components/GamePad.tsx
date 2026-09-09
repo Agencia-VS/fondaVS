@@ -2,7 +2,7 @@
 import {
   Action,
   MEMORY_ICONS,
-  MEMORY_SIDE,
+  MEMORY_COLUMNS,
   PublicRound,
   Team,
   ZONES,
@@ -123,8 +123,8 @@ export function GamePad({
             CARTA {String(d.cursor + 1).padStart(2, '0')}{' '}
             <span>
               {d.cards[d.cursor] !== null
-                ? MEMORY_ICONS[d.cards[d.cursor]!]
-                : `${Math.floor(d.cursor / MEMORY_SIDE) + 1}ª FILA · ${(d.cursor % MEMORY_SIDE) + 1}ª COLUMNA`}
+                ? (MEMORY_ICONS[d.cards[d.cursor]!] ?? 'Objeto desconocido')
+                : `${Math.floor(d.cursor / MEMORY_COLUMNS) + 1}ª FILA · ${(d.cursor % MEMORY_COLUMNS) + 1}ª COLUMNA`}
             </span>
           </div>
           <div className="dpad">

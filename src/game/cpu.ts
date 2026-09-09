@@ -1,5 +1,5 @@
 import { random, turnKey } from './engine';
-import { Action, MEMORY_SIDE, PublicMemory, PublicRound, Team, TEAMS, ZONES } from './types';
+import { Action, MEMORY_COLUMNS, PublicMemory, PublicRound, Team, TEAMS, ZONES } from './types';
 
 export const DIFFICULTIES = ['easy', 'normal', 'hard'] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
@@ -139,14 +139,14 @@ export class CpuPlayer {
       this.target = null;
       return { type: 'flip' };
     }
-    const row = Math.floor(d.cursor / MEMORY_SIDE);
-    const targetRow = Math.floor(this.target / MEMORY_SIDE);
+    const row = Math.floor(d.cursor / MEMORY_COLUMNS);
+    const targetRow = Math.floor(this.target / MEMORY_COLUMNS);
     const direction =
       row < targetRow
         ? 'down'
         : row > targetRow
           ? 'up'
-          : d.cursor % MEMORY_SIDE < this.target % MEMORY_SIDE
+          : d.cursor % MEMORY_COLUMNS < this.target % MEMORY_COLUMNS
             ? 'right'
             : 'left';
     return { type: 'move', direction };

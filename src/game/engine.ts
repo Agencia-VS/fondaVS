@@ -11,7 +11,8 @@ import {
   TEAMS,
   MEMORY_CARD_COUNT,
   MEMORY_PAIR_COUNT,
-  MEMORY_SIDE,
+  MEMORY_COLUMNS,
+  MEMORY_ROWS,
   zeroScores,
 } from './types';
 
@@ -322,16 +323,16 @@ export function applyAction(
   } else if (d.kind === 'memory' && TEAMS[d.teamIndex] === team && d.phase === 'pick') {
     if (action.type === 'move') {
       const c = d.cursor;
-      const row = Math.floor(c / MEMORY_SIDE);
-      const col = c % MEMORY_SIDE;
+      const row = Math.floor(c / MEMORY_COLUMNS);
+      const col = c % MEMORY_COLUMNS;
       d.cursor =
         action.direction === 'up'
-          ? Math.max(0, row - 1) * MEMORY_SIDE + col
+          ? Math.max(0, row - 1) * MEMORY_COLUMNS + col
           : action.direction === 'down'
-            ? Math.min(MEMORY_SIDE - 1, row + 1) * MEMORY_SIDE + col
+            ? Math.min(MEMORY_ROWS - 1, row + 1) * MEMORY_COLUMNS + col
             : action.direction === 'left'
-              ? row * MEMORY_SIDE + Math.max(0, col - 1)
-              : row * MEMORY_SIDE + Math.min(MEMORY_SIDE - 1, col + 1);
+              ? row * MEMORY_COLUMNS + Math.max(0, col - 1)
+              : row * MEMORY_COLUMNS + Math.min(MEMORY_COLUMNS - 1, col + 1);
       accepted = true;
     } else if (
       action.type === 'flip' &&

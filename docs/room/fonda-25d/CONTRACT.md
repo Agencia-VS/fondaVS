@@ -10,7 +10,7 @@ This package is the design and approval boundary for the FondaVS projector stage
 
 ## Circulation and collision
 
-The “room” is a screen composition, not a walkable 3D space. Props must stay behind the active game surface, and foreground sprites must not occlude rules, scores or the 6×6 memory grid. Collision is therefore an occlusion/clearance contract, not a physics system.
+The “room” is a screen composition, not a walkable 3D space. Props must stay behind the active game surface, and foreground sprites must not occlude rules, scores or the 6×5 memory grid. Collision is therefore an occlusion/clearance contract, not a physics system.
 
 ## Production camera and layers
 
