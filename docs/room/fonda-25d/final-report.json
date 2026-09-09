@@ -1,0 +1,10 @@
+{
+  "schema": "game-room.room-final-report.v1",
+  "roomId": "fonda-25d",
+  "gates": {"function": false, "form": false, "runtime": false},
+  "formChecks": {"floorPlanParity": false, "primaryArrival": false, "symmetry": false, "shell": false, "manifold": false, "booleans": false, "collisions": false, "support": false, "attachmentOrientation": false, "ceilingAttachmentOrientation": false, "seatingOrientation": false, "focalDistribution": false, "heroClearance": false, "colonnades": false, "screenClearance": false, "scale": false, "camera": false, "ceilingCoverage": false, "environmentCoverage": false, "provenance": false},
+  "reviewRenders": {"corners": [], "ceiling": [], "environment": {}},
+  "runtimeChecks": {"vlow": false, "textureTiers": false, "lightmap": false, "lightingManifest": false, "performance": false, "browserCapture": "", "errors": []},
+  "postmortem": {"observations": ["The MVP uses a procedural Canvas 2.5D layer so the game remains lightweight and deployable on Vercel."], "corrections": [], "remainingRisks": ["Blender-baked props are not approved or generated; the procedural layer is the current runtime visual." ]},
+  "proposedLessons": []
+}

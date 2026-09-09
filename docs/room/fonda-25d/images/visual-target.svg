@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <rect width="960" height="540" fill="#173e45"/><path d="M0 350h960v190H0z" fill="#405d4d"/>
+  <path d="M0 286l120-41 115 41 135-66 140 66 155-51 145 51 150-68v132H0z" fill="#27565a"/>
+  <path d="M0 350h960L820 540H140z" fill="#466750"/>
+  <path d="M480 350L150 540M480 350l330 190M0 420h960M0 478h960" stroke="#55725a" stroke-width="4"/>
+  <path d="M88 278h77v56H88zM80 278l46-20 47 20zM780 267h87v59h-87zM771 267l52-22 53 22z" fill="#b8754e" stroke="#122f35" stroke-width="6"/>
+  <text x="480" y="106" fill="#f4e9cd" font-family="monospace" font-size="30" text-anchor="middle">FONDA VS · 2.5D VISUAL TARGET</text>
+  <text x="480" y="145" fill="#a9c2b4" font-family="monospace" font-size="16" text-anchor="middle">fixed camera · depth layers · lightweight canvas</text>
+  <rect x="370" y="210" width="220" height="110" fill="#23464a" stroke="#122f35" stroke-width="12"/>
+  <rect x="398" y="250" width="45" height="58" fill="#fa735f"/><rect x="458" y="250" width="45" height="58" fill="#ab91ed"/><rect x="518" y="250" width="45" height="58" fill="#b4d965"/>
+</svg>

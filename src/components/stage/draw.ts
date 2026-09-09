@@ -1,5 +1,6 @@
 import { MEMORY_SIDE, PublicRound, TEAM_INFO, TEAMS } from '@/game/types';
 import { rayuelaX } from '@/game/engine';
+import { drawDepthPanel, drawDepthShadow, drawScene25d } from './scene25d';
 type C = CanvasRenderingContext2D;
 const INK = '#142f38',
   PAPER = '#f4e9cd',
@@ -67,21 +68,6 @@ function huaso(c: C, x: number, y: number, color: string, scale = 3, sack = fals
     rect(c, x + 4 * scale, y + 11 * scale, 8 * scale, 6 * scale, '#d6b37b');
     rect(c, x + 5 * scale, y + 12 * scale, 1 * scale, 4 * scale, '#bd9966');
   }
-}
-function bunting(c: C) {
-  line(c, 0, 28, 960, 28, '#c8ceb4', 2);
-  for (let i = 0; i < 24; i++) {
-    const x = i * 42 + 6;
-    const color = [TEAM_INFO.creative.color, PAPER, TEAM_INFO.media.color][i % 3];
-    for (let row = 0; row < 6; row++) rect(c, x + row * 2, 30 + row * 4, 28 - row * 4, 4, color);
-  }
-}
-function scene(c: C) {
-  rect(c, 0, 0, 960, 540, '#173e45');
-  bunting(c);
-  rect(c, 0, 370, 960, 170, '#42604e');
-  rect(c, 0, 390, 960, 150, '#344e43');
-  for (let i = 0; i < 32; i++) rect(c, (i * 73) % 960, 410 + ((i * 37) % 120), 7, 3, '#4b6950');
 }
 function ball(c: C, x: number, y: number) {
   rect(c, x - 9, y - 12, 18, 24, WHITE);
@@ -157,7 +143,7 @@ const zonePos = {
 } as const;
 export function drawStage(c: C, r: PublicRound | null, now: number, positions: number[]) {
   c.imageSmoothingEnabled = false;
-  scene(c);
+  drawScene25d(c, now);
   if (!r) {
     text(c, 'LA FONDA ESTÁ ABIERTA', 480, 145, 30, PAPER, 'center');
     text(c, 'Cuatro equipos. Una misma cancha.', 480, 181, 16, '#a9c2b4', 'center');
@@ -183,6 +169,7 @@ export function drawStage(c: C, r: PublicRound | null, now: number, positions: n
       positions[i] = (positions[i] ?? 130) + (target - (positions[i] ?? 130)) * 0.18;
       const moving = Math.abs(positions[i] - target) > 1;
       const jump = moving ? Math.abs(Math.sin(clock / 90)) * 12 : 0;
+      drawDepthShadow(c, positions[i] + 24, y + 70, 58, 7);
       huaso(c, positions[i], y + 2 - jump, TEAM_INFO[team].color, 3, true);
       text(c, `${d.steps[team]}/30`, 800, y + 43, 15, INK, 'right');
       if (clock < d.cooldowns[team])
@@ -202,6 +189,8 @@ export function drawStage(c: C, r: PublicRound | null, now: number, positions: n
     const reveal = d.phase === 'reveal' && d.lastShot;
     const keeper = d.teams[1 - d.kicker];
     const keeperPos = reveal ? zonePos[d.lastShot!.save] : zonePos.center;
+    drawDepthShadow(c, keeperPos[0], keeperPos[1] + 36, 62, 7);
+    drawDepthShadow(c, 480, 473, 70, 7);
     huaso(c, keeperPos[0] - 24, keeperPos[1] - 20, TEAM_INFO[keeper].color, 3);
     huaso(c, 453, 425, TEAM_INFO[d.teams[d.kicker]].color, 3);
     if (reveal) {
@@ -266,7 +255,7 @@ export function drawStage(c: C, r: PublicRound | null, now: number, positions: n
       );
     }
   } else if (d.kind === 'rayuela') {
-    rect(c, 130, 162, 700, 250, '#89684d');
+    drawDepthPanel(c, 130, 162, 700, 250, '#89684d');
     rect(c, 140, 172, 680, 230, '#be9470');
     rect(c, 145, 177, 670, 220, '#c99d75');
     rect(c, 446, 177, 68, 220, '#d7b482');
@@ -308,6 +297,7 @@ export function drawStage(c: C, r: PublicRound | null, now: number, positions: n
       gap = 8,
       startX = 257,
       startY = 68;
+    drawDepthPanel(c, 245, 56, 492, 432, '#23464a');
     d.cards.forEach((v, i) => {
       const x = startX + (i % MEMORY_SIDE) * (cardW + gap),
         y = startY + Math.floor(i / MEMORY_SIDE) * (cardH + gap);

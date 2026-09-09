@@ -9,8 +9,15 @@
 | `src/app/api/rooms`          | JWT, rol y operaciones breves de gestión                  |
 | `supabase/migrations`        | Integridad SQL, RLS y concesión de host                   |
 | `src/components/stage`       | Renderizado Canvas local, separado del móvil              |
+| `src/components/stage/scene25d.ts` | Capas de profundidad 2.5D y sombras sin runtime 3D |
 
 No hay estado vivo de sala en memoria de Vercel Functions. El computador del organizador ejecuta el motor y genera los sprites mediante código.
+
+## Capa visual 2.5D
+
+La escena del proyector usa una composición de cámara fija: fondo lejano, fonda intermedia, cancha en perspectiva, personajes y un ribete en primer plano. `scene25d.ts` dibuja estas capas con Canvas 2D, extrusiones de panel y sombras de contacto. El resultado conserva el estilo pixel-art y añade profundidad sin introducir Three.js, WebGL, modelos descargables ni tráfico adicional.
+
+El motor (`src/game/engine.ts`), el tipo `PublicRound`, las acciones móviles y la CPU no conocen esta capa. Por eso un futuro render de Blender puede sustituir un prop por un sprite horneado sin cambiar reglas, red, Supabase o la ruta `/solo`. El contrato de diseño y la aprobación pendiente viven en `docs/room/fonda-25d/`.
 
 ## Mensajes
 

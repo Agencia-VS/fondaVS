@@ -1,0 +1,7 @@
+{
+  "schema": "game-room.milestone-reviews.v1",
+  "roomId": "fonda-25d",
+  "function": {"status": "pending", "approvedBy": "", "approvedAt": "", "evidence": ["images/visual-target.svg"], "strangestElement": "", "notes": "Awaiting Antonio's approval of the 2.5D visual target before any Blender or Meshy work."},
+  "form": {"status": "pending", "approvedBy": "", "approvedAt": "", "evidence": [], "strangestElement": "", "notes": ""},
+  "runtime": {"status": "pending", "approvedBy": "", "approvedAt": "", "evidence": [], "strangestElement": "", "notes": ""}
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "game-room.room-brief.v1",
+  "roomId": "fonda-25d",
+  "family": "custom",
+  "purpose": "Fixed-camera 2.5D visual layer for the FondaVS projector stage. It adds depth, parallax and grounded shadows while the existing 2D game rules remain authoritative.",
+  "runtimeSurface": "Next.js host route with a 960x540 Canvas 2D stage, scaled responsively for the projector viewport.",
+  "boundsMeters": [9.6, 5.4, 1.0],
+  "hero": {"id": "host-stage", "role": "shared game board and team presentation plane", "reservedBoundsMeters": [8.8, 4.6, 0.8]},
+  "symmetry": {"mode": "bilateral", "order": 2, "appliesTo": ["architecture", "barriers", "circulation", "repeatedProps"], "exceptions": ["game-specific playfields and score labels are intentionally asymmetric when the rules require it."]},
+  "circulation": {"description": "There is no walkable 3D avatar space. The player envelope is screen-space only: the host board remains fully visible and controls stay on mobile routes.", "minimumClearanceMeters": 0.25},
+  "productionCamera": {"viewport": [960, 540], "location": [0, -8, 7], "target": [0, 0, 1.8], "verticalFovDegrees": 24},
+  "performanceBudget": {"maxSceneTriangles": 12000, "maxVLowBytes": 250000, "maxHighTextureBytes": 500000},
+  "creditBudget": {"maximumCredits": 0, "approvalRequired": true},
+  "environment": {"type": "none", "identity": "", "source": "", "assignmentKey": ""},
+  "artifacts": {"floorPlan": "plans/floor-plan.svg", "reflectedCeilingPlan": "plans/reflected-ceiling.svg", "planMetadata": "plan-metadata.json", "wallElevations": ["plans/wall-elevation.svg"], "visualTarget": "images/visual-target.svg", "openingContactSheet": "images/openings-contact-sheet.svg"}
+}

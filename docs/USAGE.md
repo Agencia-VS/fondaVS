@@ -25,6 +25,8 @@ Este modo no necesita Supabase, variables de entorno ni una cuenta. Sus resultad
 
 ## Jugar en el evento con celulares
 
+La pantalla del proyector ya usa la composición 2.5D: capas de fondo, puestos de fonda, cancha en perspectiva y sombras de contacto. Los controles y las reglas siguen siendo los mismos; no hace falta instalar nada en los celulares.
+
 Primero completar [la configuración de Supabase y Vercel](SETUP.md).
 
 1. **Operador:** entrar a `/operator` con su correo y contraseña, y crear una sala.
