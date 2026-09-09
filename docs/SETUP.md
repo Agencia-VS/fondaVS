@@ -6,16 +6,21 @@ Abrir `/solo` o **Jugar contra la CPU** desde el inicio. Funciona sin variables 
 
 ## SQL listo para copiar
 
-El único archivo necesario es [202609090001_fonda.sql](../supabase/migrations/202609090001_fonda.sql). En Supabase → **SQL Editor → New query**, pegar el archivo completo y pulsar **Run**. Ejecutarlo una sola vez en un proyecto nuevo: incluye tablas, índices, funciones y políticas de Realtime dentro de una transacción. No hay que reemplazar correos, UUID ni claves dentro del SQL.
+En Supabase → **SQL Editor → New query**, pegar cada archivo completo y pulsar **Run**, en este orden:
 
-Si ya se aplicó la primera versión de esta migración, **no volver a ejecutarla**. El modo CPU no necesita nuevas tablas ni migraciones adicionales.
+1. [202609090001_fonda.sql](../supabase/migrations/202609090001_fonda.sql): migración inicial. **Solo para un proyecto que todavía no la tenga**; crea tablas, índices, funciones y políticas de Realtime.
+2. [202609090002_spectators.sql](../supabase/migrations/202609090002_spectators.sql): habilita las pantallas compartidas para jugar desde distintas casas. Aplicar también en proyectos existentes que ya tengan la primera migración. Se puede repetir; conserva equipos y resultados.
+
+No hay que reemplazar correos, UUID ni claves dentro de los archivos.
+
+Si la aplicación ya funcionaba, ejecutar **solo el segundo archivo**. La CPU con celulares no necesita SQL adicional; la nueva vista `/watch` sí necesita esta segunda migración. No hay variables de entorno nuevas.
 
 ## Supabase
 
 Usar primero un proyecto o rama de ensayo. La migración crea tablas `fonda_*` y políticas específicas en `realtime.messages`. Revisar políticas existentes si se comparte proyecto: las políticas permisivas se combinan con OR y una regla general podría anular el aislamiento esperado.
 
-1. Ejecutar `supabase/migrations/202609090001_fonda.sql` en SQL Editor o mediante el flujo de migraciones.
-2. Habilitar **Anonymous Sign-Ins** en Authentication para los jugadores.
+1. Ejecutar las migraciones anteriores en orden, omitiendo la inicial si ya está aplicada.
+2. Habilitar **Anonymous Sign-Ins** en Authentication para los jugadores y las pantallas compartidas.
 3. Crear en Authentication → Users una cuenta de operador con correo confirmado y contraseña. Agregar su correo a `OPERATOR_EMAILS` en el servidor.
 4. Desactivar **Allow public access** en Realtime Settings. Todos los canales del código son privados.
 5. Verificar que no existan otras políticas que permitan leer/escribir cualquier canal. La aplicación utiliza heartbeats propios y no necesita Presence.
@@ -53,10 +58,12 @@ Comprobar que los teléfonos pueden abrir la URL elegida. La protección del des
 ## Validación online pendiente
 
 1. Entrar a `/operator`, crear una sala y abrir el host en una ventana visible.
-2. Conectar cuatro celulares, elegir equipos y tocar **Estoy listo**.
-3. Verificar elecciones secretas en penales y rechazo de un quinto representante.
-4. Terminar una ronda con ensayo apagado y comprobar una única fila de resultado.
-5. Recargar el host y comprobar la conservación del marcador.
-6. Desconectar un control, reconectarlo y reanudar; cerrar el host y repetir la ronda incompleta.
+2. Conectar un celular, elegir equipo y tocar **Estoy listo**. Activar **Completar equipos libres con CPU** y comprobar que juegan tres CPU.
+3. Cancelar o terminar, conectar un segundo celular y comprobar dos humanos y dos CPU. Terminar una práctica y verificar que no modifica el campeonato.
+4. Abrir el enlace de **Otra pantalla** en un computador de otra casa, sin la cuenta del operador. Verificar que muestra la misma partida y no ocupa equipo. Cerrar y reabrir esa vista: la principal debe seguir funcionando.
+5. Conectar cuatro celulares, desactivar la CPU y verificar elecciones secretas en penales y rechazo de un quinto representante.
+6. Terminar una ronda con ensayo apagado y comprobar una única fila de resultado.
+7. Recargar el host y comprobar la conservación del marcador.
+8. Desconectar un control, reconectarlo y reanudar; cerrar el host y repetir la ronda incompleta.
 
 La prueba SQL local no valida la configuración del servicio Realtime hospedado. Este ensayo debe pasar antes del evento.

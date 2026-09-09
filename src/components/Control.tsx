@@ -7,11 +7,15 @@ import { useLive } from '@/lib/realtime/use-live';
 import { ControlAction, Room } from '@/lib/room-types';
 import RoomQR from './RoomQR';
 import { Scoreboard } from './Scoreboard';
+import { DIFFICULTIES, DIFFICULTY_INFO, type Difficulty } from '@/game/cpu';
 export default function Control({ code }: { code: string }) {
   const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState('');
   const [game, setGame] = useState<Game>('penalties');
   const [practice, setPractice] = useState(true);
+  const [fillWithCpu, setFillWithCpu] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
+  const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState(false);
   const { state, online, bus } = useLive(room);
   const demo = isDemo(code);
@@ -69,7 +73,16 @@ export default function Control({ code }: { code: string }) {
   const active = round && round.phase !== 'finished';
   const members =
     state?.members ?? room.members.map((m) => ({ ...m, online: false, ready: false }));
-  const allReady = TEAMS.every((t) => members.some((m) => m.team === t && m.online && m.ready));
+  const usingCpu = active ? !!state?.cpuTeams?.length : fillWithCpu;
+  const cpuTeams = active
+    ? (state?.cpuTeams ?? [])
+    : fillWithCpu
+      ? TEAMS.filter((t) => !members.some((m) => m.team === t))
+      : [];
+  const allReady =
+    members.length > 0 &&
+    members.every((m) => m.online && m.ready) &&
+    (fillWithCpu || TEAMS.every((t) => members.some((m) => m.team === t)));
   return (
     <main className="control-page">
       <header className="topbar">
@@ -132,12 +145,48 @@ export default function Control({ code }: { code: string }) {
             <span className="eyebrow">ASÍ SE JUEGA</span>
             <p>{GAME_INFO[game].how}</p>
           </div>
+          <div className="cpu-settings">
+            <label className="practice-toggle">
+              <input
+                type="checkbox"
+                checked={usingCpu}
+                disabled={!!active || pending}
+                onChange={(e) => setFillWithCpu(e.target.checked)}
+              />
+              <span>
+                Completar equipos libres con CPU
+                <small>1 persona + 3 CPU · 2 personas + 2 CPU · 3 personas + 1 CPU.</small>
+              </span>
+            </label>
+            {usingCpu && (
+              <>
+                <label className="cpu-difficulty">
+                  Dificultad de la CPU
+                  <select
+                    value={active ? (state?.cpuDifficulty ?? difficulty) : difficulty}
+                    disabled={!!active || pending}
+                    onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                  >
+                    {DIFFICULTIES.map((d) => (
+                      <option key={d} value={d}>
+                        {DIFFICULTY_INFO[d].name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="hint">
+                  Cada persona usa su celular y mira el proyector. La CPU ocupa solo las plazas
+                  libres al iniciar; esta práctica no suma al campeonato.
+                </p>
+              </>
+            )}
+          </div>
           <div className="start-controls">
             <label className="practice-toggle">
               <input
                 type="checkbox"
-                checked={practice}
-                disabled={!!active}
+                checked={active ? !!round.practice : fillWithCpu || practice}
+                disabled={!!active || fillWithCpu || pending}
                 onChange={(e) => setPractice(e.target.checked)}
               />
               <span>
@@ -148,7 +197,14 @@ export default function Control({ code }: { code: string }) {
               <button
                 className="button primary"
                 disabled={!online || !allReady || pending || state?.saving}
-                onClick={() => void command({ type: 'start', game, practice })}
+                onClick={() =>
+                  void command({
+                    type: 'start',
+                    game,
+                    practice: fillWithCpu || practice,
+                    ...(fillWithCpu ? { cpu: difficulty } : {}),
+                  })
+                }
               >
                 {state?.saving ? 'Guardando resultado…' : 'Iniciar juego →'}
               </button>
@@ -178,7 +234,9 @@ export default function Control({ code }: { code: string }) {
           </div>
           {!active && !allReady && (
             <small className="hint">
-              Los cuatro representantes deben tocar «Estoy listo» en sus controles.
+              {fillWithCpu
+                ? 'Conecta al menos un celular. Todos los representantes deben tocar «Estoy listo». Una plaza ocupada sin conexión no se reemplaza por CPU; puedes liberarla aquí.'
+                : 'Los cuatro representantes deben tocar «Estoy listo» en sus controles.'}
             </small>
           )}
         </section>
@@ -189,17 +247,51 @@ export default function Control({ code }: { code: string }) {
             {!demo && <RoomQR code={code} />}
             <p>
               {demo
-                ? 'Abre los cuatro controles para probar.'
+                ? 'Abre tus controles en otras pestañas; puedes completar las plazas libres con CPU.'
                 : 'Escanea, elige tu equipo y prepárate.'}
             </p>
+          </section>
+          <section className="paper-panel remote-screen-panel">
+            <h2>Otra pantalla</h2>
+            <p>
+              Para jugar desde casas distintas, comparte esta vista del proyector. La otra persona
+              la abre en su computador y usa su celular como control.
+            </p>
+            <a
+              className="text-link"
+              href={`/watch/${code}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Abrir pantalla compartida ↗
+            </a>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(`${window.location.origin}/watch/${code}`);
+                  setCopied(true);
+                } catch {
+                  setError('Abre la pantalla compartida y copia su dirección para enviarla.');
+                }
+              }}
+            >
+              {copied ? 'Enlace copiado ✓' : 'Copiar enlace de pantalla'}
+            </button>
+            <small>Esta vista no ocupa un equipo ni necesita la cuenta del operador.</small>
           </section>
           <section className="roster">
             <div className="section-label">
               <h2>Los equipos</h2>
-              <span>{members.length}/4</span>
+              <span>
+                {members.length} {members.length === 1 ? 'persona' : 'personas'}
+                {cpuTeams.length ? ` + ${cpuTeams.length} CPU` : ' / 4'}
+              </span>
             </div>
             {TEAMS.map((t) => {
               const m = members.find((x) => x.team === t);
+              const cpu = cpuTeams.includes(t);
               return (
                 <div
                   className="roster-team"
@@ -212,7 +304,11 @@ export default function Control({ code }: { code: string }) {
                     <small>
                       {m
                         ? `${m.nickname} · ${m.online ? (m.ready ? 'Listo' : 'Preparándose') : 'Sin conexión'}`
-                        : 'Esperando representante'}
+                        : cpu
+                          ? active
+                            ? 'CPU · Jugando'
+                            : 'CPU si sigue libre al iniciar'
+                          : 'Esperando representante'}
                     </small>
                   </span>
                   {m && !active ? (

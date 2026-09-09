@@ -82,7 +82,10 @@ export async function roomAction(code: string, body: Record<string, unknown>): P
     const r = localRead(code);
     const now = Date.now();
     const action = body.action;
-    if (action === 'claim') {
+    if (action === 'watch') {
+      // Demo spectators only subscribe; they never claim the host or a team.
+      return localView(r);
+    } else if (action === 'claim') {
       if (r.hostInstance !== body.instance && (r.leaseUntil ?? 0) > now)
         throw new Error(
           'El proyector ya está abierto. Cierra la otra ventana y espera 6 segundos.',

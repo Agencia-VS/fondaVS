@@ -10,6 +10,8 @@ Cuatro equipos, un proyector y celulares como controles. MVP de fonda para **Cre
 - Acciones con confirmación, deduplicación y canales privados.
 - Resultados confirmados persistentes y concesión de host única.
 - Modo individual contra tres CPU: cuatro juegos, tres dificultades, teclado y controles táctiles en una pantalla.
+- Salas con celulares y CPU: 1 humano + 3 CPU, 2 + 2 o 3 + 1, con proyector separado.
+- Pantallas compartidas de una misma sala para jugar desde distintas casas.
 - Demo entre pestañas del mismo navegador, sin credenciales.
 - Migración SQL, reglas RLS y pruebas automáticas.
 
@@ -26,13 +28,13 @@ npm run dev
 
 Abre `http://localhost:3000` y selecciona **Jugar contra la CPU** (ruta `/solo`). Elige equipo, juego y dificultad: puedes jugar inmediatamente, sin variables de entorno ni Supabase. Los resultados se acumulan solo en esa página y se reinician al recargar. [Guía de uso](docs/USAGE.md).
 
-Para revisar el flujo del evento, selecciona **Explorar la demo**. Desde el panel abre el proyector y los cuatro controles. Cada control elige equipo y toca **Estoy listo**.
+Para revisar el flujo del evento, selecciona **Explorar la demo**. Desde el panel abre el proyector y entre uno y cuatro controles. Cada control elige equipo y toca **Estoy listo**. Activa **Completar equipos libres con CPU** si hay menos de cuatro personas.
 
 La demo usa BroadcastChannel y almacenamiento local. **Funciona entre pestañas del mismo navegador/origen; no conecta teléfonos distintos ni es un modo offline de producción.** Sus datos nunca se guardan en Supabase.
 
 ## Configurar online
 
-Sigue [docs/SETUP.md](docs/SETUP.md): ejecutar la migración, activar sesiones anónimas, configurar canales privados y crear un operador confirmado.
+Sigue [docs/SETUP.md](docs/SETUP.md): ejecutar las migraciones, activar sesiones anónimas, configurar canales privados y crear un operador confirmado. Si el proyecto ya funciona, aplicar solo [202609090002_spectators.sql](supabase/migrations/202609090002_spectators.sql) para habilitar las pantallas compartidas; no cambian las variables de entorno.
 
 | Variable                               | Uso                                                                 |
 | -------------------------------------- | ------------------------------------------------------------------- |
@@ -47,14 +49,15 @@ Importar el repositorio en Vercel, preset Next.js, Node 22.x, instalación `npm 
 
 ## Rutas
 
-| Ruta              | Uso                                              |
-| ----------------- | ------------------------------------------------ |
-| `/`               | Entrada por código o demo                        |
-| `/solo`           | Un jugador y tres CPU, cancha y controles juntos |
-| `/operator`       | Acceso del operador                              |
-| `/control/[code]` | Administración y selección de juegos             |
-| `/host/[code]`    | Proyector y autoridad de la partida              |
-| `/play/[code]`    | Equipo y control móvil                           |
+| Ruta              | Uso                                               |
+| ----------------- | ------------------------------------------------- |
+| `/`               | Entrada por código o demo                         |
+| `/solo`           | Un jugador y tres CPU, cancha y controles juntos  |
+| `/operator`       | Acceso del operador                               |
+| `/control/[code]` | Administración y selección de juegos              |
+| `/host/[code]`    | Proyector y autoridad de la partida               |
+| `/watch/[code]`   | Vista compartida del proyector, sin ocupar equipo |
+| `/play/[code]`    | Equipo y control móvil                            |
 
 ## Verificación
 
@@ -67,7 +70,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Las pruebas SQL usan PGlite (Postgres embebido) con Auth/Realtime simulados. Los tests de CPU completan los cuatro juegos con cualquier equipo humano y verifican elecciones ciegas, memoria de cartas vistas y pausa. E2E recorre el modo individual en escritorio/móvil y abre el panel, el proyector y cuatro controles de demo con Playwright; ejecutar sin variables de Supabase para cubrir también el estado sin configuración. El entorno CI funciona así. `npm run format` aplica Prettier.
+Las pruebas SQL usan PGlite (Postgres embebido) con Auth/Realtime simulados y verifican el acceso de espectadores solo a lectura del estado de su sala. Los tests de CPU completan los cuatro juegos y verifican elecciones ciegas, memoria, pausa, desconexiones y prácticas sin puntos. E2E recorre el modo individual y salas de demo con cuatro controles o uno/dos controles con CPU y otra pantalla sincronizada. Ejecutar sin variables de Supabase para cubrir también el estado sin configuración. El entorno CI funciona así. `npm run format` aplica Prettier.
 
 ## Arquitectura y operación
 

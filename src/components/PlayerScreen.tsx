@@ -222,7 +222,13 @@ export default function PlayerScreen({
       ) : (
         <>
           <div className="controller-game-heading">
-            <span className="eyebrow">{round.practice ? 'ENSAYO' : 'EN JUEGO'}</span>
+            <span className="eyebrow">
+              {state?.cpuTeams?.length
+                ? 'PRÁCTICA CON CPU'
+                : round.practice
+                  ? 'ENSAYO'
+                  : 'EN JUEGO'}
+            </span>
             <h1>{GAME_INFO[round.game].name}</h1>
             <p aria-live="polite">{role}</p>
           </div>

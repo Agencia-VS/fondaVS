@@ -2,10 +2,20 @@
 import { useEffect, useRef } from 'react';
 import type { PublicRound } from '@/game/types';
 import { drawStage } from './draw';
-export default function Stage({ round = null }: { round?: PublicRound | null }) {
+export default function Stage({
+  round = null,
+  clockOffset = 0,
+}: {
+  round?: PublicRound | null;
+  clockOffset?: number;
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const state = useRef(round);
   const positions = useRef<number[]>([]);
+  const offset = useRef(clockOffset);
+  useEffect(() => {
+    offset.current = clockOffset;
+  }, [clockOffset]);
   useEffect(() => {
     if (state.current?.id !== round?.id) positions.current = [];
     state.current = round;
@@ -15,7 +25,7 @@ export default function Stage({ round = null }: { round?: PublicRound | null }) 
     if (!c) return;
     let frame = 0;
     const draw = () => {
-      drawStage(c, state.current, Date.now(), positions.current);
+      drawStage(c, state.current, Date.now() + offset.current, positions.current);
       frame = requestAnimationFrame(draw);
     };
     draw();

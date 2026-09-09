@@ -10,8 +10,9 @@ import {
 } from '@/game/engine';
 import { CommandGate, commandSchema } from '@/game/protocol';
 import { GAMES, TEAMS, type Round } from '@/game/types';
+import { CpuPlayer, DIFFICULTIES, type Difficulty } from '@/game/cpu';
 import { getRoom, isDemo, roomAction } from '@/lib/rooms';
-import type { ControlAction, LiveState, Room } from '@/lib/room-types';
+import type { ControlAction, LiveState, Member, Room } from '@/lib/room-types';
 import { Bus } from './bus';
 export class Host {
   private room!: Room;
@@ -31,6 +32,9 @@ export class Host {
   private networkLost = false;
   private notice = '';
   private recorded = new Set<string>();
+  private cpus: CpuPlayer[] = [];
+  private cpuDifficulty: Difficulty | null = null;
+  private participants: Member[] = [];
   constructor(
     private code: string,
     private onState: (s: LiveState) => void,
@@ -136,6 +140,7 @@ export class Host {
       now - this.leaseAt < 5000 &&
       !this.networkLost &&
       this.round &&
+      this.participants.some((m) => m.id === id) &&
       c.hostEpoch === this.room.hostEpoch &&
       c.roundId === this.round.id &&
       c.turnId === turnKey(this.round)
@@ -156,19 +161,38 @@ export class Host {
     if (this.round && !this.networkLost) {
       const playing = this.round.phase !== 'finished' && this.round.pausedAt === null;
       if (playing && this.round.phase === 'playing') {
-        const missing = this.room.members.some(
-          (m) => now - (this.lastSeen.get(m.id)?.at ?? 0) > 4000,
-        );
-        if (missing) {
+        if (this.humanDisconnected(now)) {
           this.round = pauseRound(this.round, now);
           this.notice = 'Un control dejó de responder. Reconéctalo y reanuda la partida.';
         }
       }
       this.round = advanceRound(this.round, now);
+      // CPUs share the human action path through the engine and see only public
+      // state. They have no Supabase user, membership row, channel, or heartbeat.
+      for (const cpu of this.cpus) {
+        const action = cpu.next(publicRound(this.round), now);
+        if (action) this.round = applyAction(this.round, cpu.team, action, now).round;
+      }
       if (this.round.phase === 'finished' && !this.recorded.has(this.round.id) && !this.saving)
         void this.save();
     }
     if (now - this.lastPublish >= 100) this.publish();
+  }
+  private readyToStart(withCpu: boolean, now: number) {
+    return (
+      this.room.members.length > 0 &&
+      (withCpu || TEAMS.every((t) => this.room.members.some((m) => m.team === t))) &&
+      this.room.members.every(
+        (m) => this.lastSeen.get(m.id)?.ready && now - (this.lastSeen.get(m.id)?.at ?? 0) < 4000,
+      )
+    );
+  }
+  private humanDisconnected(now: number) {
+    return this.participants.some(
+      (m) =>
+        !this.room.members.some((member) => member.id === m.id && member.team === m.team) ||
+        now - (this.lastSeen.get(m.id)?.at ?? 0) >= 4000,
+    );
   }
   async control(action: ControlAction) {
     if (this.busy || this.stopped) return;
@@ -176,38 +200,58 @@ export class Host {
     if (now - this.leaseAt >= 5000) throw new Error('La conexión del proyector no está lista.');
     if (action.type === 'start') {
       if (!GAMES.includes(action.game)) return;
+      const withCpu = action.cpu !== undefined;
+      if (withCpu && !DIFFICULTIES.includes(action.cpu!))
+        throw new Error('Elige una dificultad válida para la CPU.');
       if (this.round && this.round.phase !== 'finished')
         throw new Error('Cancela o termina la ronda actual.');
       if (this.saving) throw new Error('Espera a que se confirme el resultado.');
-      if (
-        !TEAMS.every((t) =>
-          this.room.members.some(
-            (m) =>
-              m.team === t &&
-              this.lastSeen.get(m.id)?.ready &&
-              now - (this.lastSeen.get(m.id)?.at ?? 0) < 4000,
-          ),
-        )
-      )
-        throw new Error('Los cuatro equipos deben estar conectados y listos.');
+      if (!this.readyToStart(withCpu, now))
+        throw new Error(
+          withCpu
+            ? 'Conecta al menos un celular. Todos los representantes deben estar en línea y listos.'
+            : 'Los cuatro equipos deben estar conectados y listos.',
+        );
       this.busy = true;
       try {
         const id = crypto.randomUUID();
+        // Enforce practice in the authority, even if an older panel sends false.
+        const practice = withCpu || action.practice;
         this.room = await roomAction(this.code, {
           action: 'begin',
           instance: this.instance,
           epoch: this.room.hostEpoch,
           roundId: id,
           game: action.game,
-          practice: action.practice,
+          practice,
         });
+        // begin locks online membership. Use the returned roster, never a list
+        // of empty slots captured before a phone could join during the request.
+        if (!this.readyToStart(withCpu, Date.now())) {
+          this.room = await roomAction(this.code, {
+            action: 'abort',
+            instance: this.instance,
+            epoch: this.room.hostEpoch,
+          });
+          throw new Error(
+            'Cambió la lista de jugadores. Espera a que estén listos e inicia otra vez.',
+          );
+        }
+        this.participants = this.room.members.map((m) => ({ ...m }));
+        const cpuTeams = withCpu
+          ? TEAMS.filter((t) => !this.participants.some((m) => m.team === t))
+          : [];
+        this.cpus = cpuTeams.map(
+          (team) => new CpuPlayer(team, action.cpu!, crypto.getRandomValues(new Uint32Array(1))[0]),
+        );
+        this.cpuDifficulty = cpuTeams.length ? action.cpu! : null;
         this.networkLost = false;
         this.round = createRound(
           action.game,
           Date.now(),
           id,
           crypto.getRandomValues(new Uint32Array(1))[0],
-          action.practice,
+          practice,
         );
         this.notice = '';
       } finally {
@@ -219,8 +263,8 @@ export class Host {
     } else if (action.type === 'resume' && this.round) {
       if (this.networkLost)
         throw new Error('Esta ronda perdió conexión. Cancélala y vuelve a comenzar.');
-      if (this.room.members.some((m) => now - (this.lastSeen.get(m.id)?.at ?? 0) > 4000))
-        throw new Error('Espera a que vuelvan los cuatro controles.');
+      if (this.humanDisconnected(now))
+        throw new Error('Espera a que vuelvan los controles de los jugadores.');
       this.round = resumeRound(this.round, now);
       this.notice = '';
     } else if (action.type === 'abort') {
@@ -232,6 +276,9 @@ export class Host {
           epoch: this.room.hostEpoch,
         });
         this.round = null;
+        this.cpus = [];
+        this.cpuDifficulty = null;
+        this.participants = [];
         this.networkLost = false;
         this.notice = 'Ronda cancelada. El campeonato conserva sus resultados confirmados.';
       } finally {
@@ -262,7 +309,9 @@ export class Host {
       });
       this.recorded.add(r.id);
       this.notice = r.practice
-        ? 'Ensayo terminado. No suma puntos.'
+        ? this.cpus.length
+          ? 'Práctica con CPU terminada. No suma puntos al campeonato.'
+          : 'Ensayo terminado. No suma puntos.'
         : 'Resultado confirmado en el campeonato.';
     } catch (e) {
       this.notice = e instanceof Error ? e.message : 'No se pudo guardar. Reintentando…';
@@ -286,6 +335,8 @@ export class Host {
         online: now - (this.lastSeen.get(m.id)?.at ?? 0) < 4000,
         ready: this.lastSeen.get(m.id)?.ready ?? false,
       })),
+      cpuTeams: this.cpus.map((cpu) => cpu.team),
+      cpuDifficulty: this.cpuDifficulty,
       results: this.room.results,
       saving: this.saving,
       notice: this.notice,
