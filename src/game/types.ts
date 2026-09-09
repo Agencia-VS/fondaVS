@@ -33,7 +33,7 @@ export const GAME_INFO: Record<
   memory: {
     name: 'Memorice',
     subtitle: 'Buena memoria, mejor equipo.',
-    how: 'Mueve el cursor y voltea dos cartas en 15 segundos. Si son pareja, sumas y repites turno. Si fallas, le toca al siguiente equipo.',
+    how: 'Mueve el cursor por la matriz 6×6 y voltea dos cartas en 15 segundos. Si son pareja, sumas y repites turno. Si fallas, le toca al siguiente equipo.',
     number: '04',
   },
 };
@@ -82,6 +82,9 @@ export const MEMORY_ICONS = [
   'Sombrero',
   'Copihue',
 ] as const;
+export const MEMORY_SIDE = 6;
+export const MEMORY_CARD_COUNT = MEMORY_SIDE * MEMORY_SIDE;
+export const MEMORY_PAIR_COUNT = MEMORY_CARD_COUNT / 2;
 export type MemoryData = {
   kind: 'memory';
   cards: number[];

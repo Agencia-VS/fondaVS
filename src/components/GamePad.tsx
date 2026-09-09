@@ -1,5 +1,13 @@
 'use client';
-import { Action, MEMORY_ICONS, PublicRound, Team, ZONES, ZONE_NAMES } from '@/game/types';
+import {
+  Action,
+  MEMORY_ICONS,
+  MEMORY_SIDE,
+  PublicRound,
+  Team,
+  ZONES,
+  ZONE_NAMES,
+} from '@/game/types';
 function PadButton({
   label,
   children,
@@ -116,7 +124,7 @@ export function GamePad({
             <span>
               {d.cards[d.cursor] !== null
                 ? MEMORY_ICONS[d.cards[d.cursor]!]
-                : `${Math.floor(d.cursor / 4) + 1}ª FILA · ${(d.cursor % 4) + 1}ª COLUMNA`}
+                : `${Math.floor(d.cursor / MEMORY_SIDE) + 1}ª FILA · ${(d.cursor % MEMORY_SIDE) + 1}ª COLUMNA`}
             </span>
           </div>
           <div className="dpad">

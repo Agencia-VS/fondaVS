@@ -11,7 +11,14 @@ import {
   resumeRound,
 } from '@/game/engine';
 import { CommandGate, commandSchema } from '@/game/protocol';
-import { Round, TEAMS, zeroScores } from '@/game/types';
+import {
+  MEMORY_CARD_COUNT,
+  MEMORY_PAIR_COUNT,
+  MEMORY_SIDE,
+  Round,
+  TEAMS,
+  zeroScores,
+} from '@/game/types';
 
 describe('sack race', () => {
   it('requires a complete alternating pair, applies a one-second stumble and ignores cooldown input', () => {
@@ -129,11 +136,11 @@ function moveTo(r: Round, index: number, now: number): Round {
   while (r.data.kind === 'memory' && r.data.cursor !== index) {
     const cursor = r.data.cursor;
     const direction =
-      Math.floor(cursor / 4) < Math.floor(index / 4)
+      Math.floor(cursor / MEMORY_SIDE) < Math.floor(index / MEMORY_SIDE)
         ? 'down'
-        : Math.floor(cursor / 4) > Math.floor(index / 4)
+        : Math.floor(cursor / MEMORY_SIDE) > Math.floor(index / MEMORY_SIDE)
           ? 'up'
-          : cursor % 4 < index % 4
+          : cursor % MEMORY_SIDE < index % MEMORY_SIDE
             ? 'right'
             : 'left';
     r = applyAction(r, team, { type: 'move', direction }, now).round;
@@ -141,11 +148,13 @@ function moveTo(r: Round, index: number, now: number): Round {
   return r;
 }
 describe('memorice', () => {
-  it('shuffles eight pairs and never publishes hidden cards', () => {
+  it('shuffles eighteen pairs and never publishes hidden cards', () => {
     const r = createRound('memory', 0, 'm', 17);
     if (r.data.kind !== 'memory') throw Error();
-    for (let i = 0; i < 8; i++) expect(r.data.cards.filter((x) => x === i)).toHaveLength(2);
-    expect(publicRound(r).data).toMatchObject({ cards: Array(16).fill(null) });
+    for (let i = 0; i < MEMORY_PAIR_COUNT; i++)
+      expect(r.data.cards.filter((x) => x === i)).toHaveLength(2);
+    expect(r.data.cards).toHaveLength(MEMORY_CARD_COUNT);
+    expect(publicRound(r).data).toMatchObject({ cards: Array(MEMORY_CARD_COUNT).fill(null) });
   });
   it('rejects a double flip of the same card and expires a one-card turn', () => {
     let r = createRound('memory', 0, 'm');
@@ -174,7 +183,7 @@ describe('memorice', () => {
     let now = 3100;
     if (r.data.kind !== 'memory') throw Error();
     const cards = [...r.data.cards];
-    for (let icon = 0; icon < 8; icon++) {
+    for (let icon = 0; icon < MEMORY_PAIR_COUNT; icon++) {
       const pair = cards.flatMap((v, i) => (v === icon ? [i] : []));
       r = moveTo(r, pair[0], now);
       r = applyAction(r, 'creative', { type: 'flip' }, now).round;
@@ -185,7 +194,7 @@ describe('memorice', () => {
     }
     expect(r.phase).toBe('finished');
     expect(r.placements[0].team).toBe('creative');
-    expect(r.data.kind === 'memory' && r.data.scores.creative).toBe(8);
+    expect(r.data.kind === 'memory' && r.data.scores.creative).toBe(MEMORY_PAIR_COUNT);
   });
 });
 describe('shared safeguards', () => {

@@ -9,6 +9,9 @@ import {
   Scores,
   Team,
   TEAMS,
+  MEMORY_CARD_COUNT,
+  MEMORY_PAIR_COUNT,
+  MEMORY_SIDE,
   zeroScores,
 } from './types';
 
@@ -106,7 +109,7 @@ export function createRound(
           ? {
               kind: game,
               cards: shuffle(
-                [...Array(16)].map((_, i) => i % 8),
+                [...Array(MEMORY_CARD_COUNT)].map((_, i) => i % MEMORY_PAIR_COUNT),
                 seed,
               ),
               matched: [],
@@ -129,7 +132,7 @@ export function createRound(
       (game === 'sack-race'
         ? 90000
         : game === 'memory'
-          ? 300000
+          ? 420000
           : game === 'rayuela'
             ? 180000
             : 900000),
@@ -197,7 +200,7 @@ function tick(r: Round, now: number) {
     return;
   }
   if (d.kind === 'memory') {
-    if (now >= r.endsAt || d.matched.length === 16) {
+    if (now >= r.endsAt || d.matched.length === MEMORY_CARD_COUNT) {
       finish(r, rankScores(d.scores));
       return;
     }
@@ -319,16 +322,16 @@ export function applyAction(
   } else if (d.kind === 'memory' && TEAMS[d.teamIndex] === team && d.phase === 'pick') {
     if (action.type === 'move') {
       const c = d.cursor;
-      const row = Math.floor(c / 4);
-      const col = c % 4;
+      const row = Math.floor(c / MEMORY_SIDE);
+      const col = c % MEMORY_SIDE;
       d.cursor =
         action.direction === 'up'
-          ? Math.max(0, row - 1) * 4 + col
+          ? Math.max(0, row - 1) * MEMORY_SIDE + col
           : action.direction === 'down'
-            ? Math.min(3, row + 1) * 4 + col
+            ? Math.min(MEMORY_SIDE - 1, row + 1) * MEMORY_SIDE + col
             : action.direction === 'left'
-              ? row * 4 + Math.max(0, col - 1)
-              : row * 4 + Math.min(3, col + 1);
+              ? row * MEMORY_SIDE + Math.max(0, col - 1)
+              : row * MEMORY_SIDE + Math.min(MEMORY_SIDE - 1, col + 1);
       accepted = true;
     } else if (
       action.type === 'flip' &&

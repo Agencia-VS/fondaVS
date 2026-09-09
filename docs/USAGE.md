@@ -13,7 +13,7 @@
 | Carrera de sacos | IZQ y DER alternados; cada pareja avanza un paso                   | Flechas ← → o A / D                                                                |
 | Rayuela          | LANZAR cuando el cursor esté cerca de la cuerda central            | Espacio                                                                            |
 | Penales          | Elegir una de las cinco zonas, para chutar o atajar según el turno | 1 arriba izquierda, 2 arriba derecha, 3 centro, 4 abajo izquierda, 5 abajo derecha |
-| Memorice         | Flechas para mover el cursor y VOLTEAR para buscar una pareja      | Flechas y espacio                                                                  |
+| Memorice (6×6)   | Flechas para mover el cursor y VOLTEAR para buscar una pareja      | Flechas y espacio                                                                  |
 
 Los botones se activan cuando corresponde tu turno. La CPU juega sus turnos automáticamente, incluidos los partidos de penales entre otros equipos. En penales tienes cinco segundos y, si no eliges, se usa el centro. Cada equipo disputa una semifinal y luego la final o el tercer puesto.
 

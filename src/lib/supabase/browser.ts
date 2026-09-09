@@ -2,32 +2,53 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let client: SupabaseClient | undefined;
 let sessionPromise: Promise<void> | undefined;
-export function configured() {
+function publicKey() {
   return (
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
   );
+}
+export function configured() {
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && !!publicKey();
 }
 export function supabase() {
   if (!configured())
     throw new Error('La sala online todavía no está configurada. Puedes revisar la demo.');
-  return (client ??= createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-  ));
+  return (client ??= createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, publicKey()!));
 }
+type AuthFailure = { message?: string; code?: string; status?: number; name?: string };
+
+export function authFailureMessage(error: unknown) {
+  const failure = (error ?? {}) as AuthFailure;
+  const message = failure.message?.toLowerCase() ?? '';
+  const code = failure.code ?? failure.name ?? '';
+  const suffix = code ? ` Código: ${code}.` : '';
+  if (code === 'anonymous_provider_disabled' || message.includes('anonymous sign-ins are disabled'))
+    return `Supabase rechazó la sesión anónima. Activa Anonymous Sign-Ins en Authentication → Sign In / Providers del mismo proyecto configurado en NEXT_PUBLIC_SUPABASE_URL y vuelve a desplegar.${suffix}`;
+  if (code === 'captcha_failed' || message.includes('captcha'))
+    return `Supabase está solicitando CAPTCHA para las sesiones anónimas. Desactiva CAPTCHA para este entorno de juego o configura su clave en Supabase.${suffix}`;
+  if (failure.status === 429 || message.includes('rate limit'))
+    return `Supabase limitó temporalmente las sesiones anónimas. Espera unos segundos y vuelve a intentarlo.${suffix}`;
+  if (message.includes('failed to fetch') || message.includes('network'))
+    return `No se pudo llegar a Supabase. Revisa la URL del proyecto, la conexión del teléfono y que el despliegue tenga las variables públicas correctas.${suffix}`;
+  return `No se pudo conectar el control con Supabase.${suffix}${failure.message ? ` Detalle: ${failure.message}` : ''}`;
+}
+
 async function ensurePlayerSession() {
-  const s = supabase();
-  const {
-    data: { session },
-    error,
-  } = await s.auth.getSession();
-  if (error) throw error;
-  if (!session) {
-    const { error } = await s.auth.signInAnonymously();
-    if (error)
-      throw new Error(
-        'No se pudo conectar el control. Verifica que estén habilitadas las sesiones anónimas.',
-      );
+  try {
+    const s = supabase();
+    const {
+      data: { session },
+      error,
+    } = await s.auth.getSession();
+    if (error) throw error;
+    if (!session) {
+      const { error } = await s.auth.signInAnonymously();
+      if (error) throw error;
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('sala online todavía')) throw error;
+    throw new Error(authFailureMessage(error));
   }
 }
 export function playerSession(): Promise<void> {
